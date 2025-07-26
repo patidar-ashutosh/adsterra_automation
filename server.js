@@ -140,7 +140,7 @@ app.post('/open-url', async (req, res) => {
         return res.status(400).json({ error: 'Missing blogURL or ProxyURL' });
     }
 
-    const combinedURL = "https://www.whatismybrowser.com/detect/what-is-my-user-agent/";
+    const combinedURL = ProxyURL + encodeURIComponent(blogURL);
     const browserChoice = browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
     if (!browserChoice) {
         return res.status(400).json({ error: 'Invalid browser selection' });

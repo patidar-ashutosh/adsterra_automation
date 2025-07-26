@@ -91,7 +91,7 @@
     function updateCombinedURL() {
         const blogURLValue = document.getElementById('blogURL').value;
         const proxyURLValue = document.getElementById('ProxyURL').value;
-        document.getElementById('combinedURL').value = "https://www.whatismybrowser.com/detect/what-is-my-user-agent/";
+        document.getElementById('combinedURL').value = proxyURLValue + encodeURIComponent(blogURLValue);
     }
     document.getElementById('blogURL').addEventListener('input', updateCombinedURL);
     updateCombinedURL();

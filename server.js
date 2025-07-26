@@ -179,7 +179,7 @@ app.post('/open-url', async (req, res) => {
 
 			// Create promises for all profiles in this cycle
 			const cyclePromises = [];
-			const waitTimes = getRandomWaitTimes(profilesPerCycle, 3, 5);
+			const waitTimes = getRandomWaitTimes(profilesPerCycle);
 
 			for (let profile = 1; profile <= profilesPerCycle; profile++) {
 				const windowIndex = (cycle - 1) * profilesPerCycle + profile;

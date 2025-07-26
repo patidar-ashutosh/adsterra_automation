@@ -147,11 +147,6 @@ app.post('/open-url', async (req, res) => {
 	}
 
 	const combinedURL = ProxyURL + encodeURIComponent(blogURL);
-	const browserChoice = browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
-	if (!browserChoice) {
-		return res.status(400).json({ error: 'Invalid browser selection' });
-	}
-
 	const count = Math.max(1, Math.min(parseInt(openCount) || 1, 20));
 	const waitTimes = getRandomWaitTimes(count);
 
@@ -161,7 +156,13 @@ app.post('/open-url', async (req, res) => {
 	currentWaitTime = 0;
 	currentWindowStart = 0;
 
-	res.json({ success: true, opened: combinedURL, browser: browserChoice.name, count, waitTimes });
+	res.json({
+		success: true,
+		opened: combinedURL,
+		browser: browser === 'random' ? 'random' : browser,
+		count,
+		waitTimes
+	});
 
 	(async () => {
 		for (let i = 0; i < count; i++) {
@@ -169,6 +170,16 @@ app.post('/open-url', async (req, res) => {
 				currentWindow = i + 1;
 				currentWaitTime = waitTimes[i];
 				log(`🚀 Opening window #${currentWindow}`);
+
+				// Select browser for this specific window
+				const browserChoice =
+					browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
+				if (!browserChoice) {
+					log(`❌ Invalid browser selection for window #${currentWindow}`);
+					continue;
+				}
+
+				log(`🌐 Using browser: ${browserChoice.name} for window #${currentWindow}`);
 
 				const fingerprint = await generateFingerprint(ProxyURL);
 				const userAgent = randomUA.getRandom();

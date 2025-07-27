@@ -11,6 +11,10 @@ let completedWindows = 0;
 
 // Function to process a single window
 async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTime, cycle) {
+	let browserInstance = null;
+	let context = null;
+	let page = null;
+
 	try {
 		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`);
 
@@ -26,14 +30,14 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 		const fingerprint = await generateFingerprint(proxyURL);
 		const userAgent = randomUA.getRandom();
 
-		const browserInstance = await browserChoice.launcher.launch({ headless: false });
-		const context = await browserInstance.newContext({
+		browserInstance = await browserChoice.launcher.launch({ headless: false });
+		context = await browserInstance.newContext({
 			userAgent,
 			viewport: fingerprint.screen,
 			locale: fingerprint.browserLanguages[0],
 			timezoneId: fingerprint.timezone
 		});
-		const page = await context.newPage();
+		page = await context.newPage();
 
 		// Track this window
 		activeWindows.set(windowIndex, {
@@ -69,8 +73,18 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 			}
 		}, fingerprint.webGLMetadata);
 
-		await page.goto(combinedURL, { waitUntil: 'load' });
-		log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
+		// Navigate to the page with proper error handling
+		try {
+			await page.goto(combinedURL, {
+				waitUntil: 'load',
+				timeout: 30000 // 30 second timeout
+			});
+			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
+		} catch (navError) {
+			log(`⚠️ Navigation failed for Profile ${windowIndex}: ${navError.message}`);
+			// Continue with the process even if navigation fails
+		}
+
 		log(`🕒 Time allocated: ${waitTime}s`);
 
 		let usableScrollTime = waitTime;
@@ -80,31 +94,51 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 			usableScrollTime -= 5;
 		}
 
-		await simulateHumanScroll(page, usableScrollTime);
-		await page.waitForTimeout(1000);
-
-		await browserInstance.close();
-
-		// Remove from active windows and update completion count
-		activeWindows.delete(windowIndex);
-		completedWindows++;
+		// Only attempt scrolling if page is still available
+		if (page && !page.isClosed()) {
+			await simulateHumanScroll(page, usableScrollTime);
+			await page.waitForTimeout(1000);
+		}
 
 		log(
-			`✅ Profile ${windowIndex} (Cycle ${cycle}) completed (${completedWindows}/${totalWindows})`
+			`✅ Profile ${windowIndex} (Cycle ${cycle}) completed (${
+				completedWindows + 1
+			}/${totalWindows})`
 		);
 	} catch (err) {
 		log(`❌ Error in Profile ${windowIndex} (Cycle ${cycle}): ${err.message}`);
-
-		// Clean up on error
-		if (activeWindows.has(windowIndex)) {
-			const windowData = activeWindows.get(windowIndex);
-			try {
-				await windowData.browserInstance.close();
-			} catch (closeErr) {
-				log(`⚠️ Failed to close browser for Profile ${windowIndex}: ${closeErr.message}`);
+	} finally {
+		// Clean up resources
+		try {
+			if (page && !page.isClosed()) {
+				await page.close();
 			}
-			activeWindows.delete(windowIndex);
+		} catch (closePageErr) {
+			log(`⚠️ Failed to close page for Profile ${windowIndex}: ${closePageErr.message}`);
 		}
+
+		try {
+			if (context) {
+				await context.close();
+			}
+		} catch (closeContextErr) {
+			log(
+				`⚠️ Failed to close context for Profile ${windowIndex}: ${closeContextErr.message}`
+			);
+		}
+
+		try {
+			if (browserInstance) {
+				await browserInstance.close();
+			}
+		} catch (closeBrowserErr) {
+			log(
+				`⚠️ Failed to close browser for Profile ${windowIndex}: ${closeBrowserErr.message}`
+			);
+		}
+
+		// Remove from active windows and update completion count
+		activeWindows.delete(windowIndex);
 		completedWindows++;
 	}
 }

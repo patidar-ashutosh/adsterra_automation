@@ -2,6 +2,12 @@ const { log } = require('./helpers');
 
 // New human-like scroll simulation
 async function simulateHumanScroll(page, totalDuration = 20) {
+	// Check if page is still available
+	if (!page || page.isClosed()) {
+		log('⚠️ Page is closed, skipping scroll simulation');
+		return;
+	}
+
 	const actions = [];
 	let remainingTime = totalDuration;
 
@@ -31,89 +37,116 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 	}
 
 	for (const action of actions) {
+		// Check if page is still available before each action
+		if (!page || page.isClosed()) {
+			log('⚠️ Page closed during scroll simulation, stopping');
+			break;
+		}
+
 		log(
 			`🔁 Scrolling ${action.direction} for ${action.duration.toFixed(
 				1
 			)}s after ${action.pause.toFixed(1)}s pause`
 		);
-		await page.waitForTimeout(action.pause * 1000);
 
-		await page.evaluate(async ({ direction, duration, percent }) => {
-			const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-			const currentY = window.scrollY;
+		try {
+			await page.waitForTimeout(action.pause * 1000);
 
-			const scrollDistance = scrollHeight * (percent[1] - percent[0]);
-			const startY = currentY;
-			const endY =
-				direction === 'down'
-					? Math.min(scrollHeight, startY + scrollDistance)
-					: Math.max(0, startY - scrollDistance);
+			await page.evaluate(async ({ direction, duration, percent }) => {
+				const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+				const currentY = window.scrollY;
 
-			const steps = 60 * duration;
+				const scrollDistance = scrollHeight * (percent[1] - percent[0]);
+				const startY = currentY;
+				const endY =
+					direction === 'down'
+						? Math.min(scrollHeight, startY + scrollDistance)
+						: Math.max(0, startY - scrollDistance);
 
-			for (let i = 0; i <= steps; i++) {
-				const y = startY + (endY - startY) * (i / steps);
-				window.scrollTo(0, y);
-				await new Promise((r) => setTimeout(r, (duration * 1000) / steps));
+				const steps = 60 * duration;
+
+				for (let i = 0; i <= steps; i++) {
+					const y = startY + (endY - startY) * (i / steps);
+					window.scrollTo(0, y);
+					await new Promise((r) => setTimeout(r, (duration * 1000) / steps));
+				}
+			}, action);
+
+			if (Math.random() < 0.4) {
+				const x = Math.floor(Math.random() * 800) + 100;
+				const y = Math.floor(Math.random() * 500) + 100;
+				await page.mouse.move(x, y, { steps: 10 });
+				log(`🖱️ Moved mouse to (${x}, ${y})`);
 			}
-		}, action);
 
-		if (Math.random() < 0.4) {
-			const x = Math.floor(Math.random() * 800) + 100;
-			const y = Math.floor(Math.random() * 500) + 100;
-			await page.mouse.move(x, y, { steps: 10 });
-			log(`🖱️ Moved mouse to (${x}, ${y})`);
-		}
+			if (Math.random() < 0.15) {
+				await page.keyboard.down('Control');
+				await page.keyboard.press('KeyF');
+				await page.keyboard.up('Control');
+				log(`🔎 Simulated Ctrl+F (Find) action`);
+			}
 
-		if (Math.random() < 0.15) {
-			await page.keyboard.down('Control');
-			await page.keyboard.press('KeyF');
-			await page.keyboard.up('Control');
-			log(`🔎 Simulated Ctrl+F (Find) action`);
-		}
-
-		if (Math.random() < 0.3) {
-			const pauseTime = 500 + Math.floor(Math.random() * 1500);
-			log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`);
-			await page.waitForTimeout(pauseTime);
+			if (Math.random() < 0.3) {
+				const pauseTime = 500 + Math.floor(Math.random() * 1500);
+				log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`);
+				await page.waitForTimeout(pauseTime);
+			}
+		} catch (error) {
+			log(`⚠️ Error during scroll action: ${error.message}`);
+			break;
 		}
 	}
 
 	// Step: Visit all elements with `.ads` class
+	if (!page || page.isClosed()) {
+		log('⚠️ Page closed before visiting .ads elements');
+		return;
+	}
+
 	log('🧭 Searching for .ads elements...');
-	await page.evaluate(() => window.scrollTo(0, 0)); // Go to top before visiting ads
-	await page.waitForTimeout(1000); // Optional short pause
+	try {
+		await page.evaluate(() => window.scrollTo(0, 0)); // Go to top before visiting ads
+		await page.waitForTimeout(1000); // Optional short pause
 
-	const adHandles = await page.$$('.ads');
+		const adHandles = await page.$$('.ads');
 
-	if (adHandles.length) {
-		log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`);
-		for (const [i, handle] of adHandles.entries()) {
-			try {
-				await handle.evaluate((el) => {
-					el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				});
-
-				// Random mouse move near the ad
-				if (Math.random() < 0.6) {
-					const box = await handle.boundingBox();
-					if (box) {
-						const x = box.x + box.width / 2 + (Math.random() * 30 - 15);
-						const y = box.y + box.height / 2 + (Math.random() * 30 - 15);
-						await page.mouse.move(x, y, { steps: 10 });
-						log(`🖱️ Hovered near .ads element #${i + 1}`);
-					}
+		if (adHandles.length) {
+			log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`);
+			for (const [i, handle] of adHandles.entries()) {
+				// Check if page is still available
+				if (!page || page.isClosed()) {
+					log('⚠️ Page closed while visiting .ads elements');
+					break;
 				}
 
-				const pause = 2000 + Math.random() * 1000; // 2–3 seconds
-				log(`⏸️ Pausing on .ads element #${i + 1} for ${(pause / 1000).toFixed(1)}s`);
-				await page.waitForTimeout(pause);
-			} catch (e) {
-				log(`⚠️ Failed to visit .ads element #${i + 1}: ${e.message}`);
+				try {
+					await handle.evaluate((el) => {
+						el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					});
+
+					// Random mouse move near the ad
+					if (Math.random() < 0.6) {
+						const box = await handle.boundingBox();
+						if (box) {
+							const x = box.x + box.width / 2 + (Math.random() * 30 - 15);
+							const y = box.y + box.height / 2 + (Math.random() * 30 - 15);
+							await page.mouse.move(x, y, { steps: 10 });
+							log(`🖱️ Hovered near .ads element #${i + 1}`);
+						}
+					}
+
+					const pause = 2000 + Math.random() * 1000; // 2–3 seconds
+					log(`⏸️ Pausing on .ads element #${i + 1} for ${(pause / 1000).toFixed(1)}s`);
+					await page.waitForTimeout(pause);
+				} catch (e) {
+					log(`⚠️ Failed to visit .ads element #${i + 1}: ${e.message}`);
+				}
 			}
+		} else {
+			log('❌ No .ads elements found on the page.');
 		}
-	} else {
-		log('❌ No .ads elements found on the page.');
+	} catch (error) {
+		log(`⚠️ Error while visiting .ads elements: ${error.message}`);
 	}
 }
 

@@ -8,6 +8,7 @@ const { log, getBrowserByName, getRandomBrowser, getRandomWaitTimes } = require(
 const activeWindows = new Map();
 let totalWindows = 0;
 let completedWindows = 0;
+let isAutomationInProgress = false; // Track if automation is in progress
 
 // Function to process a single window
 async function processWindow(
@@ -170,6 +171,7 @@ async function runAutomation(config) {
 
 	totalWindows = totalCycles * profilesPerCycle;
 	completedWindows = 0;
+	isAutomationInProgress = true; // Set automation as in progress
 
 	// Run automation cycles
 	for (let cycle = 1; cycle <= totalCycles; cycle++) {
@@ -201,6 +203,12 @@ async function runAutomation(config) {
 	}
 
 	log(`🎉 All ${totalCycles} cycles completed successfully!`);
+
+	// Reset automation state to show start button
+	activeWindows.clear();
+	completedWindows = 0;
+	totalWindows = 0;
+	isAutomationInProgress = false; // Mark automation as completed
 }
 
 function getStatus() {
@@ -222,7 +230,13 @@ function getStatus() {
 		activeWindows: activeWindows.size,
 		progress: totalWindows > 0 ? Math.round((completedWindows / totalWindows) * 100) : 0,
 		activeWindowDetails,
-		status: activeWindows.size > 0 ? 'running' : completedWindows > 0 ? 'completed' : 'idle'
+		status: isAutomationInProgress
+			? activeWindows.size > 0
+				? 'running'
+				: 'preparing'
+			: completedWindows > 0
+			? 'completed'
+			: 'idle'
 	};
 }
 

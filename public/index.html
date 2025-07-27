@@ -44,6 +44,62 @@
 				background-color: #45a049;
 			}
 
+			/* Stop button styling */
+			#stopButton {
+				background-color: #f44336;
+				display: none;
+			}
+
+			#stopButton:hover {
+				background-color: #d32f2f;
+			}
+
+			/* Form overlay for blur effect */
+			.form-overlay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				display: none;
+				z-index: 10;
+				border-radius: 8px;
+			}
+
+			/* Form container for positioning */
+			.form-container {
+				position: relative;
+			}
+
+			/* Disabled form styling */
+			.form-disabled {
+				opacity: 0.6;
+				pointer-events: none;
+			}
+
+			/* Disabled form inputs */
+			.form-disabled input,
+			.form-disabled select,
+			.form-disabled textarea {
+				opacity: 0.5;
+				cursor: not-allowed;
+				background: #2a2a2a;
+			}
+
+			/* Control buttons container */
+			.control-buttons {
+				display: flex;
+				gap: 10px;
+				margin-top: 15px;
+				position: relative;
+				z-index: 50;
+			}
+
+			.control-buttons button {
+				cursor: pointer;
+				flex: 1;
+			}
+
 			#status {
 				margin-top: 20px;
 				font-weight: bold;
@@ -78,87 +134,117 @@
 	<body>
 		<h2>🧠 Automation Control Panel</h2>
 
-		<form id="automationForm">
-			<label for="blogURL">Blog URL:</label>
-			<input
-				type="text"
-				name="blogURL"
-				id="blogURL"
-				value="https://phpzerotohero.blogspot.com/2022/07/indexed-array-in-php-in-hindi.html"
-				required
-			/>
+		<div class="form-container">
+			<form id="automationForm">
+				<label for="blogURL">Blog URL:</label>
+				<input
+					type="text"
+					name="blogURL"
+					id="blogURL"
+					value="https://phpzerotohero.blogspot.com/2022/07/indexed-array-in-php-in-hindi.html"
+					required
+				/>
 
-			<label for="ProxyURL">Proxy URL:</label>
-			<input
-				type="text"
-				name="ProxyURL"
-				id="ProxyURL"
-				value="http://api.scrape.do?token=de001754420e460597aa9e1984a01e5b5bf586fcb47&url="
-				required
-			/>
+				<label for="ProxyURL">Proxy URL:</label>
+				<input
+					type="text"
+					name="ProxyURL"
+					id="ProxyURL"
+					value="http://api.scrape.do?token=de001754420e460597aa9e1984a01e5b5bf586fcb47&url="
+					required
+				/>
 
-			<label for="combinedURL">Combined URL</label>
-			<textarea
-				id="combinedURL"
-				name="combinedURL"
-				disabled
-				style="
-					width: 100%;
-					font-family: monospace;
-					resize: vertical;
-					min-height: 100px;
-					max-height: 120px;
-					overflow: auto;
-				"
-			></textarea>
+				<label for="combinedURL">Combined URL</label>
+				<textarea
+					id="combinedURL"
+					name="combinedURL"
+					disabled
+					style="
+						width: 100%;
+						font-family: monospace;
+						resize: vertical;
+						min-height: 100px;
+						max-height: 120px;
+						overflow: auto;
+					"
+				></textarea>
 
-			<label for="browser">Browser:</label>
-			<select name="browser" id="browser">
-				<option value="random">Random</option>
-				<option value="chromium">Chromium</option>
-				<option value="firefox">Firefox</option>
-				<option value="webkit">Webkit</option>
-			</select>
+				<label for="browser">Browser:</label>
+				<select name="browser" id="browser">
+					<option value="random">Random</option>
+					<option value="chromium">Chromium</option>
+					<option value="firefox">Firefox</option>
+					<option value="webkit">Webkit</option>
+				</select>
 
-			<label for="openCount">Time of Run Automation:</label>
-			<input
-				type="number"
-				name="openCount"
-				id="openCount"
-				min="1"
-				max="20"
-				value="3"
-				required
-			/>
+				<label for="openCount">Time of Run Automation:</label>
+				<input
+					type="number"
+					name="openCount"
+					id="openCount"
+					min="1"
+					max="20"
+					value="3"
+					required
+				/>
 
-			<label for="profilesAtOnce">Profiles at Once:</label>
-			<input
-				type="number"
-				name="profilesAtOnce"
-				id="profilesAtOnce"
-				min="1"
-				max="10"
-				value="2"
-				required
-			/>
+				<label for="profilesAtOnce">Profiles at Once:</label>
+				<input
+					type="number"
+					name="profilesAtOnce"
+					id="profilesAtOnce"
+					min="1"
+					max="10"
+					value="2"
+					required
+				/>
 
-			<label for="timeout">Website Loading Timeout (seconds):</label>
-			<input
-				type="number"
-				name="timeout"
-				id="timeout"
-				min="10"
-				max="120"
-				value="30"
-				required
-			/>
-			<small
-				style="background-color: #ffffff; color: #000; font-size: 15px; font-weight: bold"
-				>Recommended: 30 seconds. Increase for slow websites, decrease for fast ones.</small
-			>
+				<label for="timeout">Website Loading Timeout (seconds):</label>
+				<input
+					type="number"
+					name="timeout"
+					id="timeout"
+					min="10"
+					max="120"
+					value="30"
+					required
+				/>
+				<small
+					style="
+						background-color: #ffffff;
+						color: #000;
+						font-size: 15px;
+						font-weight: bold;
+					"
+					>Recommended: 30 seconds. Increase for slow websites, decrease for fast
+					ones.</small
+				>
 
-			<button type="submit">Start Automation</button>
-		</form>
+				<div class="control-buttons">
+					<button type="submit" id="startButton">Start Automation</button>
+				</div>
+			</form>
+			<div class="form-overlay" id="formOverlay"></div>
+		</div>
+
+		<!-- Stop button outside the form container -->
+		<button
+			type="button"
+			id="stopButton"
+			style="
+				display: none;
+				margin-top: 15px;
+				width: 100%;
+				background-color: #f44336;
+				color: #ffffff;
+				border: none;
+				cursor: pointer;
+				padding: 6px;
+				font-size: large;
+			"
+		>
+			Stop Automation
+		</button>
 
 		<div id="status">Status: Waiting...</div>
 
@@ -169,12 +255,44 @@
 			const form = document.getElementById('automationForm');
 			const statusDiv = document.getElementById('status');
 			const logArea = document.getElementById('logArea');
+			const startButton = document.getElementById('startButton');
+			const stopButton = document.getElementById('stopButton');
+			const formOverlay = document.getElementById('formOverlay');
 
 			// Set variables for default values
 			const blogURL =
 				'https://phpzerotohero.blogspot.com/2022/07/indexed-array-in-php-in-hindi.html';
 			const ProxyURL =
 				'http://api.scrape.do?token=de001754420e460597aa9e1984a01e5b5bf586fcb47&url=';
+
+			// Function to enable/disable form during automation
+			function setAutomationState(isRunning) {
+				const formInputs = form.querySelectorAll('input, select, textarea');
+
+				if (isRunning) {
+					form.classList.add('form-disabled');
+					formOverlay.style.display = 'block';
+					startButton.style.display = 'none';
+					stopButton.style.display = 'block';
+
+					// Disable all form inputs
+					formInputs.forEach((input) => {
+						input.disabled = true;
+					});
+				} else {
+					form.classList.remove('form-disabled');
+					formOverlay.style.display = 'none';
+					startButton.style.display = 'block';
+					stopButton.style.display = 'none';
+
+					// Re-enable all form inputs except the combinedURL (which should stay disabled)
+					formInputs.forEach((input) => {
+						if (input.id !== 'combinedURL') {
+							input.disabled = false;
+						}
+					});
+				}
+			}
 
 			// Update combined URL field live
 			function updateCombinedURL() {
@@ -199,6 +317,7 @@
 
 					if (data.status === 'completed') {
 						statusDiv.innerText = `Status: Automation completed ✅ (${data.completedWindows}/${data.totalWindows} profiles across all cycles)`;
+						setAutomationState(false);
 					} else if (data.activeWindows > 0) {
 						const progressText = `Progress: ${data.progress}% (${data.completedWindows}/${data.totalWindows} profiles)`;
 						const activeText = `Active: ${data.activeWindows} profiles`;
@@ -212,10 +331,13 @@
 						}
 
 						statusDiv.innerText = `${progressText} | ${activeText} | ${activeDetails}`;
+						setAutomationState(true);
 					} else if (data.status === 'idle') {
 						statusDiv.innerText = 'Status: Ready to start automation...';
+						setAutomationState(false);
 					} else {
 						statusDiv.innerText = 'Status: Preparing automation cycles...';
+						setAutomationState(true);
 					}
 
 					setTimeout(checkStatus, 2000);
@@ -225,10 +347,26 @@
 				}
 			}
 
+			// Stop automation button handler
+			stopButton.addEventListener('click', async () => {
+				try {
+					appendLog('🛑 Stop automation requested...');
+					// TODO: Implement stop automation logic
+					// For now, just log the request
+					appendLog('⚠️ Stop functionality will be implemented soon');
+				} catch (err) {
+					appendLog(`❌ Error stopping automation: ${err.message}`);
+				}
+			});
+
 			form.addEventListener('submit', async (e) => {
 				e.preventDefault();
 				const formData = new FormData(form);
 				const payload = Object.fromEntries(formData.entries());
+
+				// Immediately set automation state to prevent button flickering
+				setAutomationState(true);
+				statusDiv.innerText = 'Status: Starting automation...';
 
 				try {
 					const res = await fetch('/open-url', {
@@ -252,12 +390,16 @@
 						appendLog(`⏱️ Website Loading Timeout: ${result.timeout} seconds`);
 					} else {
 						appendLog(`❌ Failed: ${result.error}`);
+						// Reset state if automation failed to start
+						setAutomationState(false);
+						statusDiv.innerText = 'Status: Failed to start automation';
 					}
 				} catch (err) {
 					appendLog(`❌ Error: ${err.message}`);
+					// Reset state if there was an error
+					setAutomationState(false);
+					statusDiv.innerText = 'Status: Error starting automation';
 				}
-
-				statusDiv.innerText = 'Status: Running...';
 			});
 
 			checkStatus();

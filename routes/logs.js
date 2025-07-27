@@ -8,7 +8,6 @@ const {
 	getAllProfileStatuses,
 	getCurrentCycleProfileLogs,
 	getCurrentCycleProfileStatuses,
-	updateGlobalCycleInfo,
 	getGlobalCycleInfo
 } = require('../utils/helpers');
 
@@ -81,4 +80,4 @@ router.get('/profiles', (req, res) => {
 	}
 });
 
-module.exports = { router, updateGlobalCycleInfo };
+module.exports = { router };

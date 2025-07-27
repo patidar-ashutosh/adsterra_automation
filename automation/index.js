@@ -370,7 +370,6 @@ async function runAutomation(config) {
 	isAutomationInProgress = true; // Set automation as in progress
 	currentCycle = 1; // Initialize current cycle to 1
 	updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
-	updateCycleInfo(); // Update cycle info for logs route
 
 	// Reset stop state at the beginning
 	resetStopState();
@@ -379,7 +378,6 @@ async function runAutomation(config) {
 	for (let cycle = 1; cycle <= totalCycles; cycle++) {
 		currentCycle = cycle; // Update current cycle
 		updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
-		updateCycleInfo(); // Update cycle info for logs route
 
 		// Check if stop was requested before starting this cycle
 		if (shouldStop) {
@@ -505,10 +503,4 @@ function getStatus() {
 	};
 }
 
-// Function to update cycle info for logs
-function updateCycleInfo() {
-	// The global cycle info is already updated by updateGlobalCycleInfo
-	// No need to call logs route separately
-}
-
-module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers, updateCycleInfo };
+module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers };

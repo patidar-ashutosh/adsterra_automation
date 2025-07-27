@@ -220,6 +220,48 @@
 					ones.</small
 				>
 
+				<label for="minWaitTime">Minimum Wait Time (seconds):</label>
+				<input
+					type="number"
+					name="minWaitTime"
+					id="minWaitTime"
+					min="10"
+					max="120"
+					value="45"
+					required
+				/>
+				<small
+					style="
+						background-color: #ffffff;
+						color: #000;
+						font-size: 15px;
+						font-weight: bold;
+					"
+					>Recommended: 45 seconds. This is the minimum time each profile will stay on the
+					website.</small
+				>
+
+				<label for="maxWaitTime">Maximum Wait Time (seconds):</label>
+				<input
+					type="number"
+					name="maxWaitTime"
+					id="maxWaitTime"
+					min="10"
+					max="120"
+					value="55"
+					required
+				/>
+				<small
+					style="
+						background-color: #ffffff;
+						color: #000;
+						font-size: 15px;
+						font-weight: bold;
+					"
+					>Recommended: 55 seconds. This is the maximum time each profile will stay on the
+					website.</small
+				>
+
 				<div class="control-buttons">
 					<button type="submit" id="startButton">Start Automation</button>
 				</div>
@@ -388,6 +430,9 @@
 							} cycles × ${result.profiles} profiles each)`
 						);
 						appendLog(`⏱️ Website Loading Timeout: ${result.timeout} seconds`);
+						appendLog(
+							`⏰ Wait Time Range: ${result.minWait} - ${result.maxWait} seconds per profile`
+						);
 					} else {
 						appendLog(`❌ Failed: ${result.error}`);
 						// Reset state if automation failed to start

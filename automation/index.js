@@ -163,7 +163,9 @@ async function runAutomation(config) {
 		browser = 'random',
 		openCount = 1,
 		profilesAtOnce = 1,
-		timeout = 30
+		timeout = 30,
+		minWaitTime = 45,
+		maxWaitTime = 55
 	} = config;
 
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount), 20));
@@ -178,7 +180,7 @@ async function runAutomation(config) {
 		log(`🔄 Starting Cycle ${cycle}/${totalCycles}`);
 
 		// Create promises for all profiles in this cycle
-		const waitTimes = getRandomWaitTimes(profilesPerCycle);
+		const waitTimes = getRandomWaitTimes(profilesPerCycle, minWaitTime, maxWaitTime);
 
 		const promises = Array.from({ length: profilesPerCycle }, (_, i) =>
 			processWindow(

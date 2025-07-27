@@ -47,14 +47,6 @@ function getRandomWaitTimes(count, min = 45, max = 55) {
 	return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min);
 }
 
-// function getSegmentDurations(totalTime, parts) {
-// 	const base = totalTime / parts;
-// 	return Array.from({ length: parts }, () => {
-// 		const variation = Math.random() * 0.4 - 0.2;
-// 		return Math.max(3, Math.floor(base + base * variation));
-// 	});
-// }
-
 module.exports = {
 	log,
 	getLogs,
@@ -62,5 +54,4 @@ module.exports = {
 	getRandomBrowser,
 	getBrowserByName,
 	getRandomWaitTimes
-	// getSegmentDurations
 };

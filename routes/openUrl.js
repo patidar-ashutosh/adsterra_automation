@@ -5,7 +5,16 @@ const { runAutomation } = require('../automation');
 
 router.post('/', async (req, res) => {
 	try {
-		const { blogURL, ProxyURL, browser, openCount, profilesAtOnce, timeout } = req.body;
+		const {
+			blogURL,
+			ProxyURL,
+			browser,
+			openCount,
+			profilesAtOnce,
+			timeout,
+			minWaitTime,
+			maxWaitTime
+		} = req.body;
 
 		// Input validation
 		if (!blogURL || !ProxyURL) {
@@ -29,6 +38,8 @@ router.post('/', async (req, res) => {
 		const cycles = parseInt(openCount) || 1;
 		const profiles = parseInt(profilesAtOnce) || 1;
 		const pageTimeout = parseInt(timeout) || 30;
+		const minWait = parseInt(minWaitTime) || 45;
+		const maxWait = parseInt(maxWaitTime) || 55;
 
 		if (cycles < 1 || cycles > 20) {
 			return res.status(400).json({
@@ -51,6 +62,27 @@ router.post('/', async (req, res) => {
 			});
 		}
 
+		if (minWait < 10 || minWait > 120) {
+			return res.status(400).json({
+				success: false,
+				error: 'minWaitTime must be between 10 and 120 seconds'
+			});
+		}
+
+		if (maxWait < 10 || maxWait > 120) {
+			return res.status(400).json({
+				success: false,
+				error: 'maxWaitTime must be between 10 and 120 seconds'
+			});
+		}
+
+		if (minWait >= maxWait) {
+			return res.status(400).json({
+				success: false,
+				error: 'minWaitTime must be less than maxWaitTime'
+			});
+		}
+
 		// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
 		const combinedURL = 'https://apkmody.com/';
 
@@ -61,7 +93,9 @@ router.post('/', async (req, res) => {
 			url: combinedURL,
 			cycles,
 			profiles,
-			timeout: pageTimeout
+			timeout: pageTimeout,
+			minWait,
+			maxWait
 		});
 
 		// Run automation in background
@@ -71,7 +105,9 @@ router.post('/', async (req, res) => {
 			browser,
 			openCount: cycles,
 			profilesAtOnce: profiles,
-			timeout: pageTimeout
+			timeout: pageTimeout,
+			minWaitTime: minWait,
+			maxWaitTime: maxWait
 		}).catch((err) => {
 			console.error('Automation error:', err);
 		});

@@ -142,6 +142,77 @@ function getSegmentDurations(totalTime, parts) {
 	});
 }
 
+// New human-like scroll simulation
+async function simulateHumanScroll(page, totalDuration = 20) {
+	const actions = [];
+
+	let remainingTime = totalDuration;
+	while (remainingTime > 2) {
+		const direction = Math.random() > 0.3 ? 'down' : 'up';
+		const duration = Math.floor(Math.random() * 4) + 2;
+		const pause = Math.random() * 2;
+		const percent =
+			direction === 'down'
+				? [Math.random() * 0.1, Math.random() * 0.3 + 0.3]
+				: [Math.random() * 0.05, Math.random() * 0.2];
+
+		actions.push({ direction, duration, pause, percent });
+
+		remainingTime -= duration + pause;
+	}
+
+	for (const action of actions) {
+		log(
+			`🔁 Scrolling ${action.direction} for ${action.duration}s after ${action.pause.toFixed(
+				1
+			)}s pause`
+		);
+		await page.waitForTimeout(action.pause * 1000);
+
+		await page.evaluate(async ({ direction, duration, percent }) => {
+			const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+			const currentY = window.scrollY;
+			const scrollDistance = scrollHeight * (percent[1] - percent[0]);
+			const startY = currentY;
+			const endY =
+				direction === 'down'
+					? Math.min(scrollHeight, startY + scrollDistance)
+					: Math.max(0, startY - scrollDistance);
+
+			const steps = 60 * duration;
+
+			for (let i = 0; i <= steps; i++) {
+				const y = startY + (endY - startY) * (i / steps);
+				window.scrollTo(0, y);
+				await new Promise((r) => setTimeout(r, (duration * 1000) / steps));
+			}
+		}, action);
+
+		// Occasionally move mouse during scroll
+		if (Math.random() < 0.4) {
+			const x = Math.floor(Math.random() * 800) + 100;
+			const y = Math.floor(Math.random() * 500) + 100;
+			await page.mouse.move(x, y, { steps: 10 });
+			log(`🖱️ Moved mouse to (${x}, ${y})`);
+		}
+
+		// Random extra pause
+		if (Math.random() < 0.3) {
+			const pauseTime = 500 + Math.floor(Math.random() * 1500);
+			log(`😴 Pausing for ${(pauseTime / 1000).toFixed(1)}s`);
+			await page.waitForTimeout(pauseTime);
+		}
+	}
+
+	// Occasionally simulate Ctrl+F
+	if (Math.random() < 0.2) {
+		await page.keyboard.down('Control');
+		await page.keyboard.press('KeyF');
+		await page.keyboard.up('Control');
+		log(`🔎 Simulated Ctrl+F (Find) action`);
+	}
+}
+
 app.post('/open-url', async (req, res) => {
 	const { blogURL, ProxyURL, browser, openCount, profilesAtOnce } = req.body;
 
@@ -288,93 +359,7 @@ async function processWindow(windowIndex, browser, combinedURL, ProxyURL, waitTi
 			usableScrollTime -= 5;
 		}
 
-		const scrollPlan = [
-			{ start: 0.1, end: 0.3 },
-			{ start: 0.3, end: 0.5 },
-			{ start: 0.5, end: 0.8 },
-			{ start: 0.8, end: 1.0 }
-		];
-		const durations = getSegmentDurations(usableScrollTime, scrollPlan.length);
-		scrollPlan.forEach((seg, index) => (seg.duration = durations[index]));
-
-		for (const seg of scrollPlan) {
-			log(
-				`📜 Profile ${windowIndex} (Cycle ${cycle}): Scrolling from ${Math.round(
-					seg.start * 100
-				)}% to ${Math.round(seg.end * 100)}% in ${seg.duration}s`
-			);
-			await page.evaluate(
-				async ({ start, end, duration }) => {
-					const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-					const startY = Math.floor(scrollHeight * start);
-					const endY = Math.floor(scrollHeight * end);
-					const steps = 60 * duration;
-
-					for (let i = 0; i <= steps; i++) {
-						const y = startY + (endY - startY) * (i / steps);
-						window.scrollTo(0, y);
-						await new Promise((r) => setTimeout(r, (duration * 1000) / steps));
-					}
-				},
-				{ start: seg.start, end: seg.end, duration: seg.duration }
-			);
-
-			await new Promise((r) => setTimeout(r, 1000 + Math.floor(Math.random() * 2000)));
-		}
-
-		// Safe random text selection
-		if (Math.random() < 0.5) {
-			log(`🖱️ Attempting text selection in Profile ${windowIndex} (Cycle ${cycle})`);
-			const safeElementHandle = await page.evaluateHandle(() => {
-				const candidates = Array.from(document.querySelectorAll('p, span, div')).filter(
-					(el) => {
-						const style = window.getComputedStyle(el);
-						const rect = el.getBoundingClientRect();
-						const hasText = el.innerText.trim().length > 10;
-						const isVisible =
-							rect.width > 50 &&
-							rect.height > 10 &&
-							style.display !== 'none' &&
-							style.visibility !== 'hidden';
-						const isSafe =
-							!el.closest('a') &&
-							!el.closest('.ads, .ad, .sponsored, [class*="ad"], [id*="ad"]');
-						return hasText && isVisible && isSafe;
-					}
-				);
-				const randomIndex = Math.floor(Math.random() * candidates.length);
-				return candidates[randomIndex] || null;
-			});
-
-			if (safeElementHandle) {
-				const box = await safeElementHandle.boundingBox();
-				if (box) {
-					const mouse = page.mouse;
-					const x1 = box.x + 5;
-					const y1 = box.y + 5;
-					const x2 = x1 + Math.min(100, box.width - 10);
-					const y2 = y1 + Math.min(20, box.height - 10);
-
-					await mouse.move(x1, y1);
-					await mouse.down();
-					await mouse.move(x2, y2, { steps: 10 });
-					await mouse.up();
-
-					log(
-						`📋 Profile ${windowIndex} (Cycle ${cycle}): Text selected and copied at (${Math.round(
-							x1
-						)}, ${Math.round(y1)})`
-					);
-					await page.keyboard.down('Control');
-					await page.keyboard.press('KeyC');
-					await page.keyboard.up('Control');
-				}
-			} else {
-				log(
-					`⚠️ Profile ${windowIndex} (Cycle ${cycle}): No safe element found for selection`
-				);
-			}
-		}
+		await simulateHumanScroll(page, usableScrollTime);
 
 		await new Promise((r) => setTimeout(r, 1000));
 		await browserInstance.close();

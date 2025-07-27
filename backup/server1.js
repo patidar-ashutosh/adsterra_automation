@@ -130,7 +130,7 @@ function getBrowserByName(name) {
 	return null;
 }
 
-function getRandomWaitTimes(count, min = 35, max = 55) {
+function getRandomWaitTimes(count, min = 45, max = 55) {
 	return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min);
 }
 
@@ -145,33 +145,45 @@ function getSegmentDurations(totalTime, parts) {
 // New human-like scroll simulation
 async function simulateHumanScroll(page, totalDuration = 20) {
 	const actions = [];
-
 	let remainingTime = totalDuration;
+
+	// Simulate human exploring only part of the page
+	const maxScrollDepth = Math.random() * 0.2 + 0.5; // 50% to 70%
+
 	while (remainingTime > 2) {
 		const direction = Math.random() > 0.3 ? 'down' : 'up';
-		const duration = Math.floor(Math.random() * 4) + 2;
-		const pause = Math.random() * 2;
+		const pause = 2 + Math.random(); // 2–3 seconds pause
+
+		// Smaller scroll ranges for slower feel
+		const scrollStart = Math.random() * 0.05; // small offset
+		const scrollSize =
+			direction === 'down'
+				? Math.random() * 0.06 + 0.02 // 2% to 8%
+				: Math.random() * 0.03 + 0.01; // 1% to 4%
+
 		const percent =
 			direction === 'down'
-				? [Math.random() * 0.1, Math.random() * 0.3 + 0.3]
-				: [Math.random() * 0.05, Math.random() * 0.2];
+				? [scrollStart, Math.min(scrollStart + scrollSize, maxScrollDepth)]
+				: [scrollStart, scrollStart + scrollSize];
+
+		const duration = 1 + Math.random(); // 1–2 seconds duration
 
 		actions.push({ direction, duration, pause, percent });
-
 		remainingTime -= duration + pause;
 	}
 
 	for (const action of actions) {
 		log(
-			`🔁 Scrolling ${action.direction} for ${action.duration}s after ${action.pause.toFixed(
+			`🔁 Scrolling ${action.direction} for ${action.duration.toFixed(
 				1
-			)}s pause`
+			)}s after ${action.pause.toFixed(1)}s pause`
 		);
 		await page.waitForTimeout(action.pause * 1000);
 
 		await page.evaluate(async ({ direction, duration, percent }) => {
 			const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
 			const currentY = window.scrollY;
+
 			const scrollDistance = scrollHeight * (percent[1] - percent[0]);
 			const startY = currentY;
 			const endY =
@@ -188,7 +200,6 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 			}
 		}, action);
 
-		// Occasionally move mouse during scroll
 		if (Math.random() < 0.4) {
 			const x = Math.floor(Math.random() * 800) + 100;
 			const y = Math.floor(Math.random() * 500) + 100;
@@ -196,20 +207,55 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 			log(`🖱️ Moved mouse to (${x}, ${y})`);
 		}
 
-		// Random extra pause
+		if (Math.random() < 0.15) {
+			await page.keyboard.down('Control');
+			await page.keyboard.press('KeyF');
+			await page.keyboard.up('Control');
+			log(`🔎 Simulated Ctrl+F (Find) action`);
+		}
+
 		if (Math.random() < 0.3) {
 			const pauseTime = 500 + Math.floor(Math.random() * 1500);
-			log(`😴 Pausing for ${(pauseTime / 1000).toFixed(1)}s`);
+			log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`);
 			await page.waitForTimeout(pauseTime);
 		}
 	}
 
-	// Occasionally simulate Ctrl+F
-	if (Math.random() < 0.2) {
-		await page.keyboard.down('Control');
-		await page.keyboard.press('KeyF');
-		await page.keyboard.up('Control');
-		log(`🔎 Simulated Ctrl+F (Find) action`);
+	// Step: Visit all elements with `.ads` class
+	log('🧭 Searching for .ads elements...');
+	await page.evaluate(() => window.scrollTo(0, 0)); // Go to top before visiting ads
+	await page.waitForTimeout(1000); // Optional short pause
+
+	const adHandles = await page.$$('.ads');
+
+	if (adHandles.length) {
+		log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`);
+		for (const [i, handle] of adHandles.entries()) {
+			try {
+				await handle.evaluate((el) => {
+					el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				});
+
+				// Random mouse move near the ad
+				if (Math.random() < 0.6) {
+					const box = await handle.boundingBox();
+					if (box) {
+						const x = box.x + box.width / 2 + (Math.random() * 30 - 15);
+						const y = box.y + box.height / 2 + (Math.random() * 30 - 15);
+						await page.mouse.move(x, y, { steps: 10 });
+						log(`🖱️ Hovered near .ads element #${i + 1}`);
+					}
+				}
+
+				const pause = 2000 + Math.random() * 1000; // 2–3 seconds
+				log(`⏸️ Pausing on .ads element #${i + 1} for ${(pause / 1000).toFixed(1)}s`);
+				await page.waitForTimeout(pause);
+			} catch (e) {
+				log(`⚠️ Failed to visit .ads element #${i + 1}: ${e.message}`);
+			}
+		}
+	} else {
+		log('❌ No .ads elements found on the page.');
 	}
 }
 
@@ -220,7 +266,8 @@ app.post('/open-url', async (req, res) => {
 		return res.status(400).json({ error: 'Missing blogURL or ProxyURL' });
 	}
 
-	const combinedURL = ProxyURL + encodeURIComponent(blogURL);
+	// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
+	const combinedURL = 'https://apkmody.com/';
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount) || 1, 20));
 	const profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce) || 1, 10));
 

@@ -3,7 +3,15 @@ const randomUA = require('random-useragent');
 const { chromium, firefox, webkit } = require('playwright');
 const generateFingerprint = require('../utils/fingerprint');
 const simulateHumanScroll = require('../utils/scroll');
-const { log, getBrowserByName, getRandomBrowser, getRandomWaitTimes } = require('../utils/helpers');
+const {
+	log,
+	getBrowserByName,
+	getRandomBrowser,
+	getRandomWaitTimes,
+	updateProfileStatus,
+	getProfileStatus,
+	clearProfileLogs
+} = require('../utils/helpers');
 
 const activeWindows = new Map();
 let totalWindows = 0;
@@ -44,15 +52,18 @@ async function processWindow(
 		// Check if stop was requested before starting
 		if (shouldStop) {
 			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped`, windowIndex);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
 		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
+		updateProfileStatus(windowIndex, 'waiting');
 
 		// Select browser for this specific window
 		const browserChoice = browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
 		if (!browserChoice) {
 			log(`❌ Invalid browser selection for Profile ${windowIndex}`, windowIndex);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -67,6 +78,7 @@ async function processWindow(
 				`⏹️ Skipping Profile ${windowIndex} - automation stopped before browser launch`,
 				windowIndex
 			);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -83,6 +95,7 @@ async function processWindow(
 			} catch (e) {
 				log(`⚠️ Error closing browser after launch: ${e.message}`, windowIndex);
 			}
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -95,6 +108,7 @@ async function processWindow(
 				`⏹️ Stopping Profile ${windowIndex} - automation stopped before context creation`,
 				windowIndex
 			);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -111,6 +125,7 @@ async function processWindow(
 				`⏹️ Stopping Profile ${windowIndex} - automation stopped after context creation`,
 				windowIndex
 			);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -122,6 +137,7 @@ async function processWindow(
 				`⏹️ Stopping Profile ${windowIndex} - automation stopped after page creation`,
 				windowIndex
 			);
+			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
@@ -160,6 +176,7 @@ async function processWindow(
 					`⏹️ Stopping Profile ${windowIndex} before navigation - automation stopped`,
 					windowIndex
 				);
+				updateProfileStatus(windowIndex, 'failed');
 				return;
 			}
 
@@ -191,6 +208,7 @@ async function processWindow(
 						`⏹️ Stopping Profile ${windowIndex} during navigation - automation stopped`,
 						windowIndex
 					);
+					updateProfileStatus(windowIndex, 'failed');
 					return;
 				}
 				throw navError; // Re-throw other navigation errors
@@ -202,16 +220,12 @@ async function processWindow(
 					`⏹️ Stopping Profile ${windowIndex} after navigation - automation stopped`,
 					windowIndex
 				);
+				updateProfileStatus(windowIndex, 'failed');
 				return;
 			}
 
 			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
-
-			// Check if stop was requested after page load
-			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${windowIndex} - automation stopped`, windowIndex);
-				return;
-			}
+			updateProfileStatus(windowIndex, 'running');
 
 			// 🎯 CRITICAL FIX: Start tracking AFTER page is loaded
 			// Track this window ONLY after successful page load
@@ -227,10 +241,20 @@ async function processWindow(
 				windowIndex
 			);
 		} catch (navError) {
-			log(
-				`⚠️ Navigation failed for Profile ${windowIndex}: ${navError.message}`,
-				windowIndex
-			);
+			// Provide user-friendly error messages
+			let errorMessage = navError.message;
+			if (errorMessage.includes('Timeout') && errorMessage.includes('exceeded')) {
+				errorMessage = `❌ The site is not loaded under ${timeout} seconds so the profile is closed.`;
+			} else if (errorMessage.includes('net::ERR_')) {
+				errorMessage = `❌ Network error: Unable to connect to the website.`;
+			} else if (errorMessage.includes('ERR_NAME_NOT_RESOLVED')) {
+				errorMessage = `❌ DNS error: Website address could not be resolved.`;
+			} else {
+				errorMessage = `❌ Navigation failed: ${navError.message}`;
+			}
+
+			log(errorMessage, windowIndex);
+			updateProfileStatus(windowIndex, 'failed');
 			// Don't track this window if navigation failed
 			return;
 		}
@@ -256,8 +280,10 @@ async function processWindow(
 			}/${totalWindows})`,
 			windowIndex
 		);
+		updateProfileStatus(windowIndex, 'completed');
 	} catch (err) {
 		log(`❌ Error in Profile ${windowIndex} (Cycle ${cycle}): ${err.message}`, windowIndex);
+		updateProfileStatus(windowIndex, 'failed');
 	} finally {
 		// Clean up resources
 		try {
@@ -315,6 +341,9 @@ async function runAutomation(config) {
 		minWaitTime = 45,
 		maxWaitTime = 55
 	} = config;
+
+	// Clear previous profile logs
+	clearProfileLogs();
 
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount), 20));
 	const profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));

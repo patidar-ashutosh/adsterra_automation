@@ -152,6 +152,24 @@
 				min-height: 200px;
 			}
 
+			/* Error message styling */
+			.error-message {
+				color: #ff4444;
+				font-weight: bold;
+			}
+
+			/* Success message styling */
+			.success-message {
+				color: #4caf50;
+				font-weight: bold;
+			}
+
+			/* Warning message styling */
+			.warning-message {
+				color: #ff9800;
+				font-weight: bold;
+			}
+
 			/* Hide form during automation */
 			.automation-running .form-container {
 				display: none;
@@ -472,6 +490,24 @@
 								}
 							}
 						}
+
+						// Update profile statuses
+						if (data.success && data.profileStatuses) {
+							for (let i = 1; i <= currentProfilesCount; i++) {
+								const status = data.profileStatuses[i];
+								if (status) {
+									let className = 'waiting';
+									if (status === 'running') {
+										className = 'running';
+									} else if (status === 'completed') {
+										className = 'completed';
+									} else if (status === 'failed') {
+										className = 'error';
+									}
+									updateProfileStatus(i, status, className);
+								}
+							}
+						}
 					}
 				} catch (error) {
 					console.error('Failed to fetch profile logs:', error);
@@ -622,6 +658,7 @@
 								i,
 								`⏰ Wait Time Range: ${result.minWait} - ${result.maxWait} seconds per profile`
 							);
+							appendProfileLog(i, `⏳ Waiting for automation to start...`);
 						}
 					} else {
 						console.error(`Failed: ${result.error}`);

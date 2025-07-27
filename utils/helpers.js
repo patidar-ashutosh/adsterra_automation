@@ -3,6 +3,7 @@ const { chromium, firefox, webkit } = require('playwright');
 
 const logs = [];
 const profileLogs = new Map(); // Track logs for each profile
+const profileStatus = new Map(); // Track status for each profile
 
 function log(message, profileIndex = null) {
 	const time = new Date().toISOString();
@@ -15,8 +16,29 @@ function log(message, profileIndex = null) {
 		if (!profileLogs.has(profileIndex)) {
 			profileLogs.set(profileIndex, []);
 		}
-		profileLogs.get(profileIndex).push(entry);
+		// Store logs without timestamp for cleaner display
+		const cleanMessage = message;
+		profileLogs.get(profileIndex).push(cleanMessage);
 	}
+}
+
+// Function to update profile status
+function updateProfileStatus(profileIndex, status) {
+	profileStatus.set(profileIndex, status);
+}
+
+// Function to get profile status
+function getProfileStatus(profileIndex) {
+	return profileStatus.get(profileIndex) || 'waiting';
+}
+
+// Function to get all profile statuses
+function getAllProfileStatuses() {
+	const result = {};
+	for (const [profileIndex, status] of profileStatus.entries()) {
+		result[profileIndex] = status;
+	}
+	return result;
 }
 
 function getLogs() {
@@ -38,6 +60,7 @@ function getAllProfileLogs() {
 
 function clearProfileLogs() {
 	profileLogs.clear();
+	profileStatus.clear();
 }
 
 function shuffleArray(arr) {
@@ -79,6 +102,9 @@ module.exports = {
 	getProfileLogs,
 	getAllProfileLogs,
 	clearProfileLogs,
+	updateProfileStatus,
+	getProfileStatus,
+	getAllProfileStatuses,
 	shuffleArray,
 	getRandomBrowser,
 	getBrowserByName,

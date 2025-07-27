@@ -1,7 +1,12 @@
 // routes/logs.js
 const express = require('express');
 const router = express.Router();
-const { getLogs, getProfileLogs, getAllProfileLogs } = require('../utils/helpers');
+const {
+	getLogs,
+	getProfileLogs,
+	getAllProfileLogs,
+	getAllProfileStatuses
+} = require('../utils/helpers');
 
 router.get('/', (req, res) => {
 	try {
@@ -38,9 +43,11 @@ router.get('/profile/:profileIndex', (req, res) => {
 router.get('/profiles', (req, res) => {
 	try {
 		const allProfileLogs = getAllProfileLogs();
+		const allProfileStatuses = getAllProfileStatuses();
 		res.json({
 			success: true,
-			profileLogs: allProfileLogs
+			profileLogs: allProfileLogs,
+			profileStatuses: allProfileStatuses
 		});
 	} catch (error) {
 		console.error('All profile logs route error:', error);

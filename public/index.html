@@ -142,6 +142,21 @@
 				required
 			/>
 
+			<label for="timeout">Website Loading Timeout (seconds):</label>
+			<input
+				type="number"
+				name="timeout"
+				id="timeout"
+				min="10"
+				max="120"
+				value="30"
+				required
+			/>
+			<small
+				style="background-color: #ffffff; color: #000; font-size: 15px; font-weight: bold"
+				>Recommended: 30 seconds. Increase for slow websites, decrease for fast ones.</small
+			>
+
 			<button type="submit">Start Automation</button>
 		</form>
 
@@ -225,13 +240,16 @@
 					const result = await res.json();
 
 					if (result.success) {
-						appendLog(`Started automation on: ${result.opened}`);
+						appendLog(`Started automation on: ${result.url}`);
 						appendLog(
-							`Browser: ${result.browser}, Cycles: ${result.totalCycles}, Profiles per Cycle: ${result.profilesPerCycle}`
+							`Browser: ${result.browser}, Cycles: ${result.cycles}, Profiles per Cycle: ${result.profiles}`
 						);
 						appendLog(
-							`📊 Total Profiles: ${result.totalWindows} (${result.totalCycles} cycles × ${result.profilesPerCycle} profiles each)`
+							`📊 Total Profiles: ${result.cycles * result.profiles} (${
+								result.cycles
+							} cycles × ${result.profiles} profiles each)`
 						);
+						appendLog(`⏱️ Website Loading Timeout: ${result.timeout} seconds`);
 					} else {
 						appendLog(`❌ Failed: ${result.error}`);
 					}

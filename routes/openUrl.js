@@ -5,7 +5,7 @@ const { runAutomation } = require('../automation');
 
 router.post('/', async (req, res) => {
 	try {
-		const { blogURL, ProxyURL, browser, openCount, profilesAtOnce } = req.body;
+		const { blogURL, ProxyURL, browser, openCount, profilesAtOnce, timeout } = req.body;
 
 		// Input validation
 		if (!blogURL || !ProxyURL) {
@@ -28,6 +28,7 @@ router.post('/', async (req, res) => {
 		// Validate numeric inputs
 		const cycles = parseInt(openCount) || 1;
 		const profiles = parseInt(profilesAtOnce) || 1;
+		const pageTimeout = parseInt(timeout) || 30;
 
 		if (cycles < 1 || cycles > 20) {
 			return res.status(400).json({
@@ -43,6 +44,13 @@ router.post('/', async (req, res) => {
 			});
 		}
 
+		if (pageTimeout < 10 || pageTimeout > 120) {
+			return res.status(400).json({
+				success: false,
+				error: 'timeout must be between 10 and 120 seconds'
+			});
+		}
+
 		// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
 		const combinedURL = 'https://apkmody.com/';
 
@@ -52,7 +60,8 @@ router.post('/', async (req, res) => {
 			started: true,
 			url: combinedURL,
 			cycles,
-			profiles
+			profiles,
+			timeout: pageTimeout
 		});
 
 		// Run automation in background
@@ -61,7 +70,8 @@ router.post('/', async (req, res) => {
 			proxyURL: ProxyURL,
 			browser,
 			openCount: cycles,
-			profilesAtOnce: profiles
+			profilesAtOnce: profiles,
+			timeout: pageTimeout
 		}).catch((err) => {
 			console.error('Automation error:', err);
 		});

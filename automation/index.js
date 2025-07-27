@@ -10,7 +10,15 @@ let totalWindows = 0;
 let completedWindows = 0;
 
 // Function to process a single window
-async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTime, cycle) {
+async function processWindow(
+	windowIndex,
+	browser,
+	combinedURL,
+	proxyURL,
+	waitTime,
+	cycle,
+	timeout = 30
+) {
 	let browserInstance = null;
 	let context = null;
 	let page = null;
@@ -69,7 +77,7 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 		try {
 			await page.goto(combinedURL, {
 				waitUntil: 'load',
-				timeout: 30000 // 30 second timeout
+				timeout: timeout * 1000 // Convert seconds to milliseconds
 			});
 			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
 
@@ -148,7 +156,14 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 }
 
 async function runAutomation(config) {
-	const { url, proxyURL, browser = 'random', openCount = 1, profilesAtOnce = 1 } = config;
+	const {
+		url,
+		proxyURL,
+		browser = 'random',
+		openCount = 1,
+		profilesAtOnce = 1,
+		timeout = 30
+	} = config;
 
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount), 20));
 	const profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
@@ -170,7 +185,8 @@ async function runAutomation(config) {
 				url,
 				proxyURL,
 				waitTimes[i],
-				cycle
+				cycle,
+				timeout
 			)
 		);
 

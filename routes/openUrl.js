@@ -84,7 +84,7 @@ router.post('/', async (req, res) => {
 		}
 
 		// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
-		const combinedURL = 'https://apkmody.com/';
+		const combinedURL = 'https://getmodsapk.com/';
 
 		// Send initial response
 		res.json({

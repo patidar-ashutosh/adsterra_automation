@@ -1,10 +1,10 @@
 const { log } = require('./helpers');
 
 // New human-like scroll simulation
-async function simulateHumanScroll(page, totalDuration = 20) {
+async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null) {
 	// Check if page is still available
 	if (!page || page.isClosed()) {
-		log('⚠️ Page is closed, skipping scroll simulation');
+		log('⚠️ Page is closed, skipping scroll simulation', profileIndex);
 		return;
 	}
 
@@ -39,14 +39,15 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 	for (const action of actions) {
 		// Check if page is still available before each action
 		if (!page || page.isClosed()) {
-			log('⚠️ Page closed during scroll simulation, stopping');
+			log('⚠️ Page closed during scroll simulation, stopping', profileIndex);
 			break;
 		}
 
 		log(
 			`🔁 Scrolling ${action.direction} for ${action.duration.toFixed(
 				1
-			)}s after ${action.pause.toFixed(1)}s pause`
+			)}s after ${action.pause.toFixed(1)}s pause`,
+			profileIndex
 		);
 
 		try {
@@ -76,34 +77,34 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 				const x = Math.floor(Math.random() * 800) + 100;
 				const y = Math.floor(Math.random() * 500) + 100;
 				await page.mouse.move(x, y, { steps: 10 });
-				log(`🖱️ Moved mouse to (${x}, ${y})`);
+				log(`🖱️ Moved mouse to (${x}, ${y})`, profileIndex);
 			}
 
 			if (Math.random() < 0.15) {
 				await page.keyboard.down('Control');
 				await page.keyboard.press('KeyF');
 				await page.keyboard.up('Control');
-				log(`🔎 Simulated Ctrl+F (Find) action`);
+				log(`🔎 Simulated Ctrl+F (Find) action`, profileIndex);
 			}
 
 			if (Math.random() < 0.3) {
 				const pauseTime = 500 + Math.floor(Math.random() * 1500);
-				log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`);
+				log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`, profileIndex);
 				await page.waitForTimeout(pauseTime);
 			}
 		} catch (error) {
-			log(`⚠️ Error during scroll action: ${error.message}`);
+			log(`⚠️ Error during scroll action: ${error.message}`, profileIndex);
 			break;
 		}
 	}
 
 	// Step: Visit all elements with `.ads` class
 	if (!page || page.isClosed()) {
-		log('⚠️ Page closed before visiting .ads elements');
+		log('⚠️ Page closed before visiting .ads elements', profileIndex);
 		return;
 	}
 
-	log('🧭 Searching for .ads elements...');
+	log('🧭 Searching for .ads elements...', profileIndex);
 	try {
 		await page.evaluate(() => window.scrollTo(0, 0)); // Go to top before visiting ads
 		await page.waitForTimeout(1000); // Optional short pause
@@ -111,11 +112,11 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 		const adHandles = await page.$$('.ads');
 
 		if (adHandles.length) {
-			log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`);
+			log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`, profileIndex);
 			for (const [i, handle] of adHandles.entries()) {
 				// Check if page is still available
 				if (!page || page.isClosed()) {
-					log('⚠️ Page closed while visiting .ads elements');
+					log('⚠️ Page closed while visiting .ads elements', profileIndex);
 					break;
 				}
 
@@ -131,22 +132,25 @@ async function simulateHumanScroll(page, totalDuration = 20) {
 							const x = box.x + box.width / 2 + (Math.random() * 30 - 15);
 							const y = box.y + box.height / 2 + (Math.random() * 30 - 15);
 							await page.mouse.move(x, y, { steps: 10 });
-							log(`🖱️ Hovered near .ads element #${i + 1}`);
+							log(`🖱️ Hovered near .ads element #${i + 1}`, profileIndex);
 						}
 					}
 
 					const pause = 2000 + Math.random() * 1000; // 2–3 seconds
-					log(`⏸️ Pausing on .ads element #${i + 1} for ${(pause / 1000).toFixed(1)}s`);
+					log(
+						`⏸️ Pausing on .ads element #${i + 1} for ${(pause / 1000).toFixed(1)}s`,
+						profileIndex
+					);
 					await page.waitForTimeout(pause);
 				} catch (e) {
-					log(`⚠️ Failed to visit .ads element #${i + 1}: ${e.message}`);
+					log(`⚠️ Failed to visit .ads element #${i + 1}: ${e.message}`, profileIndex);
 				}
 			}
 		} else {
-			log('❌ No .ads elements found on the page.');
+			log('❌ No .ads elements found on the page.', profileIndex);
 		}
 	} catch (error) {
-		log(`⚠️ Error while visiting .ads elements: ${error.message}`);
+		log(`⚠️ Error while visiting .ads elements: ${error.message}`, profileIndex);
 	}
 }
 

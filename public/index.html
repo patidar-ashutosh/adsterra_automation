@@ -428,19 +428,21 @@
 			let profileLogs = new Map();
 			let currentProfilesCount = 0;
 			let logUpdateInterval = null;
+			let currentCycleProfiles = 0; // Track profiles for current cycle
 
-			// Function to create profile log areas
-			function createProfileLogs(profilesCount) {
+			// Function to create profile log areas for current cycle
+			function createProfileLogsForCycle(profilesCount, cycle) {
 				profileLogsGrid.innerHTML = '';
 				profileLogs.clear();
 				currentProfilesCount = profilesCount;
+				currentCycleProfiles = profilesCount;
 
 				for (let i = 1; i <= profilesCount; i++) {
 					const logItem = document.createElement('div');
 					logItem.className = 'profile-log-item';
 					logItem.innerHTML = `
 						<div class="profile-log-header">
-							<div class="profile-log-title">Profile ${i}</div>
+							<div class="profile-log-title">Profile ${i} (Cycle ${cycle})</div>
 							<div class="profile-log-status waiting" id="profileStatus${i}">Waiting</div>
 						</div>
 						<textarea class="profile-log-area" id="profileLog${i}" readonly></textarea>
@@ -450,6 +452,17 @@
 					// Store reference to log area
 					profileLogs.set(i, document.getElementById(`profileLog${i}`));
 				}
+			}
+
+			// Function to create profile log areas (for initial setup)
+			function createProfileLogs(profilesCount) {
+				createProfileLogsForCycle(profilesCount, 1);
+			}
+
+			// Function to update profile titles with cycle information
+			function updateProfileTitles(cycle) {
+				// Recreate profile areas for new cycle
+				createProfileLogsForCycle(currentCycleProfiles, cycle);
 			}
 
 			// Function to append log to specific profile
@@ -478,8 +491,30 @@
 				try {
 					const response = await fetch('/logs/profiles');
 					const data = await response.json();
+					console.log('Received profile logs:', data);
+					console.log('Current cycle in frontend:', currentCycle);
+					console.log('Backend currentCycle:', data.currentCycle);
+					console.log('Backend profilesPerCycle:', data.profilesPerCycle);
 
 					if (data.success && data.profileLogs) {
+						// Check if we have cycle info and need to update profile areas
+						if (
+							data.currentCycle &&
+							data.profilesPerCycle &&
+							data.currentCycle !== currentCycle
+						) {
+							console.log(
+								`Cycle change detected: ${currentCycle} -> ${data.currentCycle}`
+							);
+							currentCycle = data.currentCycle;
+							currentProfilesCount = data.profilesPerCycle;
+							currentCycleProfiles = data.profilesPerCycle;
+							console.log('Updating profile areas for cycle:', data.currentCycle);
+							createProfileLogsForCycle(data.profilesPerCycle, data.currentCycle);
+						} else {
+							console.log('No cycle change detected or missing data');
+						}
+
 						for (let i = 1; i <= currentProfilesCount; i++) {
 							const profileLog = data.profileLogs[i];
 							if (profileLog) {
@@ -555,6 +590,9 @@
 			document.getElementById('blogURL').addEventListener('input', updateCombinedURL);
 			updateCombinedURL();
 
+			// Track current cycle for UI updates
+			let currentCycle = 1; // Initialize to 1 to match backend
+
 			async function checkStatus() {
 				try {
 					const response = await fetch('/automation-status');
@@ -585,6 +623,7 @@
 					} else if (data.status === 'idle') {
 						statusDiv.innerText = 'Status: Ready to start automation...';
 						setAutomationState(false);
+						currentCycle = 1; // Reset cycle counter to 1
 					} else {
 						statusDiv.innerText = 'Status: Preparing automation cycles...';
 						setAutomationState(true);

@@ -10,13 +10,16 @@ const {
 	getRandomWaitTimes,
 	updateProfileStatus,
 	getProfileStatus,
-	clearProfileLogs
+	clearProfileLogs,
+	updateGlobalCycleInfo
 } = require('../utils/helpers');
 
 const activeWindows = new Map();
 let totalWindows = 0;
 let completedWindows = 0;
 let isAutomationInProgress = false; // Track if automation is in progress
+let currentCycle = 0; // Track current cycle
+let profilesPerCycle = 0; // Track profiles per cycle
 
 // Stop functionality variables
 let shouldStop = false;
@@ -34,6 +37,11 @@ function resetStopState() {
 	activeBrowsers = [];
 }
 
+// Function to get cycle-specific profile index
+function getCycleSpecificIndex(globalIndex, cycle, profilesPerCycle) {
+	return ((globalIndex - 1) % profilesPerCycle) + 1;
+}
+
 // Function to process a single window
 async function processWindow(
 	windowIndex,
@@ -47,27 +55,31 @@ async function processWindow(
 	let browserInstance = null;
 	let context = null;
 	let page = null;
+	const cycleSpecificIndex = getCycleSpecificIndex(windowIndex, cycle, profilesPerCycle);
 
 	try {
 		// Check if stop was requested before starting
 		if (shouldStop) {
-			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped`, windowIndex);
+			log(`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
-		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
+		log(`🚀 Opening Profile ${cycleSpecificIndex} (Cycle ${cycle})`, windowIndex);
 		updateProfileStatus(windowIndex, 'waiting');
 
 		// Select browser for this specific window
 		const browserChoice = browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
 		if (!browserChoice) {
-			log(`❌ Invalid browser selection for Profile ${windowIndex}`, windowIndex);
+			log(`❌ Invalid browser selection for Profile ${cycleSpecificIndex}`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			return;
 		}
 
-		log(`🌐 Using browser: ${browserChoice.name} for Profile ${windowIndex}`, windowIndex);
+		log(
+			`🌐 Using browser: ${browserChoice.name} for Profile ${cycleSpecificIndex}`,
+			windowIndex
+		);
 
 		const fingerprint = await generateFingerprint(proxyURL);
 		const userAgent = randomUA.getRandom();
@@ -75,7 +87,7 @@ async function processWindow(
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
 			log(
-				`⏹️ Skipping Profile ${windowIndex} - automation stopped before browser launch`,
+				`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped before browser launch`,
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
@@ -87,7 +99,7 @@ async function processWindow(
 		// Check if stop was requested after browser launch
 		if (shouldStop) {
 			log(
-				`⏹️ Stopping Profile ${windowIndex} - automation stopped after browser launch`,
+				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after browser launch`,
 				windowIndex
 			);
 			try {
@@ -105,7 +117,7 @@ async function processWindow(
 		// Check if stop was requested before creating context
 		if (shouldStop) {
 			log(
-				`⏹️ Stopping Profile ${windowIndex} - automation stopped before context creation`,
+				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped before context creation`,
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
@@ -122,7 +134,7 @@ async function processWindow(
 		// Check if stop was requested after context creation
 		if (shouldStop) {
 			log(
-				`⏹️ Stopping Profile ${windowIndex} - automation stopped after context creation`,
+				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after context creation`,
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
@@ -134,7 +146,7 @@ async function processWindow(
 		// Check if stop was requested after page creation
 		if (shouldStop) {
 			log(
-				`⏹️ Stopping Profile ${windowIndex} - automation stopped after page creation`,
+				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after page creation`,
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
@@ -173,12 +185,14 @@ async function processWindow(
 			// Check if stop was requested before starting navigation
 			if (shouldStop) {
 				log(
-					`⏹️ Stopping Profile ${windowIndex} before navigation - automation stopped`,
+					`⏹️ Stopping Profile ${cycleSpecificIndex} before navigation - automation stopped`,
 					windowIndex
 				);
 				updateProfileStatus(windowIndex, 'failed');
 				return;
 			}
+
+			log(`🌐 Loading website for Profile ${cycleSpecificIndex}...`, windowIndex);
 
 			// Navigate to the page with stop checking
 			const navigationPromise = page.goto(combinedURL, {
@@ -205,7 +219,7 @@ async function processWindow(
 			} catch (navError) {
 				if (navError.message === 'STOP_REQUESTED') {
 					log(
-						`⏹️ Stopping Profile ${windowIndex} during navigation - automation stopped`,
+						`⏹️ Stopping Profile ${cycleSpecificIndex} during navigation - automation stopped`,
 						windowIndex
 					);
 					updateProfileStatus(windowIndex, 'failed');
@@ -217,14 +231,14 @@ async function processWindow(
 			// Check if stop was requested after page load
 			if (shouldStop) {
 				log(
-					`⏹️ Stopping Profile ${windowIndex} after navigation - automation stopped`,
+					`⏹️ Stopping Profile ${cycleSpecificIndex} after navigation - automation stopped`,
 					windowIndex
 				);
 				updateProfileStatus(windowIndex, 'failed');
 				return;
 			}
 
-			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
+			log(`🌐 Page loaded for Profile ${cycleSpecificIndex} (Cycle ${cycle})`, windowIndex);
 			updateProfileStatus(windowIndex, 'running');
 
 			// 🎯 CRITICAL FIX: Start tracking AFTER page is loaded
@@ -237,7 +251,7 @@ async function processWindow(
 			});
 
 			log(
-				`⏱️ Wait timer started for Profile ${windowIndex} (${waitTime}s allocated)`,
+				`⏱️ Wait timer started for Profile ${cycleSpecificIndex} (${waitTime}s allocated)`,
 				windowIndex
 			);
 		} catch (navError) {
@@ -270,19 +284,22 @@ async function processWindow(
 
 		// Only attempt scrolling if page is still available and not stopped
 		if (page && !page.isClosed() && !shouldStop) {
-			await simulateHumanScroll(page, usableScrollTime);
+			await simulateHumanScroll(page, usableScrollTime, windowIndex);
 			await page.waitForTimeout(1000);
 		}
 
 		log(
-			`✅ Profile ${windowIndex} (Cycle ${cycle}) completed (${
+			`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed (${
 				completedWindows + 1
 			}/${totalWindows})`,
 			windowIndex
 		);
 		updateProfileStatus(windowIndex, 'completed');
 	} catch (err) {
-		log(`❌ Error in Profile ${windowIndex} (Cycle ${cycle}): ${err.message}`, windowIndex);
+		log(
+			`❌ Error in Profile ${cycleSpecificIndex} (Cycle ${cycle}): ${err.message}`,
+			windowIndex
+		);
 		updateProfileStatus(windowIndex, 'failed');
 	} finally {
 		// Clean up resources
@@ -292,7 +309,7 @@ async function processWindow(
 			}
 		} catch (closePageErr) {
 			log(
-				`⚠️ Failed to close page for Profile ${windowIndex}: ${closePageErr.message}`,
+				`⚠️ Failed to close page for Profile ${cycleSpecificIndex}: ${closePageErr.message}`,
 				windowIndex
 			);
 		}
@@ -303,7 +320,7 @@ async function processWindow(
 			}
 		} catch (closeContextErr) {
 			log(
-				`⚠️ Failed to close context for Profile ${windowIndex}: ${closeContextErr.message}`,
+				`⚠️ Failed to close context for Profile ${cycleSpecificIndex}: ${closeContextErr.message}`,
 				windowIndex
 			);
 		}
@@ -319,7 +336,7 @@ async function processWindow(
 			}
 		} catch (closeBrowserErr) {
 			log(
-				`⚠️ Failed to close browser for Profile ${windowIndex}: ${closeBrowserErr.message}`,
+				`⚠️ Failed to close browser for Profile ${cycleSpecificIndex}: ${closeBrowserErr.message}`,
 				windowIndex
 			);
 		}
@@ -346,24 +363,35 @@ async function runAutomation(config) {
 	clearProfileLogs();
 
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount), 20));
-	const profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
+	profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
 
 	totalWindows = totalCycles * profilesPerCycle;
 	completedWindows = 0;
 	isAutomationInProgress = true; // Set automation as in progress
+	currentCycle = 1; // Initialize current cycle to 1
+	updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
+	updateCycleInfo(); // Update cycle info for logs route
 
 	// Reset stop state at the beginning
 	resetStopState();
 
 	// Run automation cycles
 	for (let cycle = 1; cycle <= totalCycles; cycle++) {
+		currentCycle = cycle; // Update current cycle
+		updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
+		updateCycleInfo(); // Update cycle info for logs route
+
 		// Check if stop was requested before starting this cycle
 		if (shouldStop) {
 			log(`⏹️ Stopping automation - cycle ${cycle} cancelled`);
 			break;
 		}
 
+		// Clear logs from previous cycle to start fresh
+		clearProfileLogs();
+
 		log(`🔄 Starting Cycle ${cycle}/${totalCycles}`);
+		log(`📊 Cycle ${cycle} will process ${profilesPerCycle} profiles`);
 
 		// Create promises for all profiles in this cycle
 		const waitTimes = getRandomWaitTimes(profilesPerCycle, minWaitTime, maxWaitTime);
@@ -389,6 +417,7 @@ async function runAutomation(config) {
 		}
 
 		log(`✅ Cycle ${cycle} completed`);
+		log(`📈 Progress: ${completedWindows}/${totalWindows} total profiles completed`);
 
 		// Small delay between cycles (except for the last cycle)
 		if (cycle < totalCycles && !shouldStop) {
@@ -470,8 +499,16 @@ function getStatus() {
 			: completedWindows > 0
 			? 'completed'
 			: 'idle',
-		shouldStop
+		shouldStop,
+		currentCycle,
+		profilesPerCycle
 	};
 }
 
-module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers };
+// Function to update cycle info for logs
+function updateCycleInfo() {
+	// The global cycle info is already updated by updateGlobalCycleInfo
+	// No need to call logs route separately
+}
+
+module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers, updateCycleInfo };

@@ -20,7 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Automation start
 app.use('/open-url', openUrlRoute);
 // Logs endpoint
-app.use('/logs', logsRoute);
+app.use('/logs', logsRoute.router);
 // Automation status
 app.use('/automation-status', automationStatusRoute);
 // Stop automation

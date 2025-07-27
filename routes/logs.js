@@ -5,7 +5,11 @@ const {
 	getLogs,
 	getProfileLogs,
 	getAllProfileLogs,
-	getAllProfileStatuses
+	getAllProfileStatuses,
+	getCurrentCycleProfileLogs,
+	getCurrentCycleProfileStatuses,
+	updateGlobalCycleInfo,
+	getGlobalCycleInfo
 } = require('../utils/helpers');
 
 router.get('/', (req, res) => {
@@ -42,12 +46,31 @@ router.get('/profile/:profileIndex', (req, res) => {
 // Get all profile logs
 router.get('/profiles', (req, res) => {
 	try {
-		const allProfileLogs = getAllProfileLogs();
-		const allProfileStatuses = getAllProfileStatuses();
+		const cycleInfo = getGlobalCycleInfo();
+		let allProfileLogs, allProfileStatuses;
+
+		if (cycleInfo.currentCycle > 0 && cycleInfo.profilesPerCycle > 0) {
+			// Use current cycle logs
+			allProfileLogs = getCurrentCycleProfileLogs(
+				cycleInfo.profilesPerCycle,
+				cycleInfo.currentCycle
+			);
+			allProfileStatuses = getCurrentCycleProfileStatuses(
+				cycleInfo.profilesPerCycle,
+				cycleInfo.currentCycle
+			);
+		} else {
+			// Fallback to all profile logs
+			allProfileLogs = getAllProfileLogs();
+			allProfileStatuses = getAllProfileStatuses();
+		}
+
 		res.json({
 			success: true,
 			profileLogs: allProfileLogs,
-			profileStatuses: allProfileStatuses
+			profileStatuses: allProfileStatuses,
+			currentCycle: cycleInfo.currentCycle,
+			profilesPerCycle: cycleInfo.profilesPerCycle
 		});
 	} catch (error) {
 		console.error('All profile logs route error:', error);
@@ -58,4 +81,4 @@ router.get('/profiles', (req, res) => {
 	}
 });
 
-module.exports = router;
+module.exports = { router, updateGlobalCycleInfo };

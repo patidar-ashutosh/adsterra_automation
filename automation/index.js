@@ -43,27 +43,30 @@ async function processWindow(
 	try {
 		// Check if stop was requested before starting
 		if (shouldStop) {
-			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped`);
+			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped`, windowIndex);
 			return;
 		}
 
-		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`);
+		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
 
 		// Select browser for this specific window
 		const browserChoice = browser !== 'random' ? getBrowserByName(browser) : getRandomBrowser();
 		if (!browserChoice) {
-			log(`❌ Invalid browser selection for Profile ${windowIndex}`);
+			log(`❌ Invalid browser selection for Profile ${windowIndex}`, windowIndex);
 			return;
 		}
 
-		log(`🌐 Using browser: ${browserChoice.name} for Profile ${windowIndex}`);
+		log(`🌐 Using browser: ${browserChoice.name} for Profile ${windowIndex}`, windowIndex);
 
 		const fingerprint = await generateFingerprint(proxyURL);
 		const userAgent = randomUA.getRandom();
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
-			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped before browser launch`);
+			log(
+				`⏹️ Skipping Profile ${windowIndex} - automation stopped before browser launch`,
+				windowIndex
+			);
 			return;
 		}
 
@@ -71,11 +74,14 @@ async function processWindow(
 
 		// Check if stop was requested after browser launch
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after browser launch`);
+			log(
+				`⏹️ Stopping Profile ${windowIndex} - automation stopped after browser launch`,
+				windowIndex
+			);
 			try {
 				await browserInstance.close();
 			} catch (e) {
-				log(`⚠️ Error closing browser after launch: ${e.message}`);
+				log(`⚠️ Error closing browser after launch: ${e.message}`, windowIndex);
 			}
 			return;
 		}
@@ -85,7 +91,10 @@ async function processWindow(
 
 		// Check if stop was requested before creating context
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped before context creation`);
+			log(
+				`⏹️ Stopping Profile ${windowIndex} - automation stopped before context creation`,
+				windowIndex
+			);
 			return;
 		}
 
@@ -98,7 +107,10 @@ async function processWindow(
 
 		// Check if stop was requested after context creation
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after context creation`);
+			log(
+				`⏹️ Stopping Profile ${windowIndex} - automation stopped after context creation`,
+				windowIndex
+			);
 			return;
 		}
 
@@ -106,10 +118,14 @@ async function processWindow(
 
 		// Check if stop was requested after page creation
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after page creation`);
+			log(
+				`⏹️ Stopping Profile ${windowIndex} - automation stopped after page creation`,
+				windowIndex
+			);
 			return;
 		}
 
+		// Inject fingerprint scripts
 		await page.addInitScript((langs) => {
 			Object.defineProperty(navigator, 'languages', {
 				get: () => langs
@@ -140,7 +156,10 @@ async function processWindow(
 		try {
 			// Check if stop was requested before starting navigation
 			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${windowIndex} before navigation - automation stopped`);
+				log(
+					`⏹️ Stopping Profile ${windowIndex} before navigation - automation stopped`,
+					windowIndex
+				);
 				return;
 			}
 
@@ -169,7 +188,8 @@ async function processWindow(
 			} catch (navError) {
 				if (navError.message === 'STOP_REQUESTED') {
 					log(
-						`⏹️ Stopping Profile ${windowIndex} during navigation - automation stopped`
+						`⏹️ Stopping Profile ${windowIndex} during navigation - automation stopped`,
+						windowIndex
 					);
 					return;
 				}
@@ -178,15 +198,18 @@ async function processWindow(
 
 			// Check if stop was requested after page load
 			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${windowIndex} after navigation - automation stopped`);
+				log(
+					`⏹️ Stopping Profile ${windowIndex} after navigation - automation stopped`,
+					windowIndex
+				);
 				return;
 			}
 
-			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
+			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`, windowIndex);
 
 			// Check if stop was requested after page load
 			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${windowIndex} - automation stopped`);
+				log(`⏹️ Stopping Profile ${windowIndex} - automation stopped`, windowIndex);
 				return;
 			}
 
@@ -199,18 +222,24 @@ async function processWindow(
 				cycle
 			});
 
-			log(`⏱️ Wait timer started for Profile ${windowIndex} (${waitTime}s allocated)`);
+			log(
+				`⏱️ Wait timer started for Profile ${windowIndex} (${waitTime}s allocated)`,
+				windowIndex
+			);
 		} catch (navError) {
-			log(`⚠️ Navigation failed for Profile ${windowIndex}: ${navError.message}`);
+			log(
+				`⚠️ Navigation failed for Profile ${windowIndex}: ${navError.message}`,
+				windowIndex
+			);
 			// Don't track this window if navigation failed
 			return;
 		}
 
-		log(`🕒 Time allocated: ${waitTime}s`);
+		log(`🕒 Time allocated: ${waitTime}s`, windowIndex);
 
 		let usableScrollTime = waitTime;
 		if (usableScrollTime > 10) {
-			log(`⏳ Waiting 5s before scroll...`);
+			log(`⏳ Waiting 5s before scroll...`, windowIndex);
 			await page.waitForTimeout(5000);
 			usableScrollTime -= 5;
 		}
@@ -224,10 +253,11 @@ async function processWindow(
 		log(
 			`✅ Profile ${windowIndex} (Cycle ${cycle}) completed (${
 				completedWindows + 1
-			}/${totalWindows})`
+			}/${totalWindows})`,
+			windowIndex
 		);
 	} catch (err) {
-		log(`❌ Error in Profile ${windowIndex} (Cycle ${cycle}): ${err.message}`);
+		log(`❌ Error in Profile ${windowIndex} (Cycle ${cycle}): ${err.message}`, windowIndex);
 	} finally {
 		// Clean up resources
 		try {
@@ -235,7 +265,10 @@ async function processWindow(
 				await page.close();
 			}
 		} catch (closePageErr) {
-			log(`⚠️ Failed to close page for Profile ${windowIndex}: ${closePageErr.message}`);
+			log(
+				`⚠️ Failed to close page for Profile ${windowIndex}: ${closePageErr.message}`,
+				windowIndex
+			);
 		}
 
 		try {
@@ -244,7 +277,8 @@ async function processWindow(
 			}
 		} catch (closeContextErr) {
 			log(
-				`⚠️ Failed to close context for Profile ${windowIndex}: ${closeContextErr.message}`
+				`⚠️ Failed to close context for Profile ${windowIndex}: ${closeContextErr.message}`,
+				windowIndex
 			);
 		}
 
@@ -259,7 +293,8 @@ async function processWindow(
 			}
 		} catch (closeBrowserErr) {
 			log(
-				`⚠️ Failed to close browser for Profile ${windowIndex}: ${closeBrowserErr.message}`
+				`⚠️ Failed to close browser for Profile ${windowIndex}: ${closeBrowserErr.message}`,
+				windowIndex
 			);
 		}
 

@@ -54,69 +54,10 @@
 				background-color: #d32f2f;
 			}
 
-			/* Form overlay for blur effect */
-			.form-overlay {
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				display: none;
-				z-index: 10;
-				border-radius: 8px;
-			}
-
-			/* Form container for positioning */
-			.form-container {
-				position: relative;
-			}
-
-			/* Disabled form styling */
-			.form-disabled {
-				opacity: 0.6;
-				pointer-events: none;
-			}
-
-			/* Disabled form inputs */
-			.form-disabled input,
-			.form-disabled select,
-			.form-disabled textarea {
-				opacity: 0.5;
-				cursor: not-allowed;
-				background: #2a2a2a;
-			}
-
-			/* Control buttons container */
-			.control-buttons {
-				display: flex;
-				gap: 10px;
-				margin-top: 15px;
-				position: relative;
-				z-index: 50;
-			}
-
-			.control-buttons button {
-				cursor: pointer;
-				flex: 1;
-			}
-
 			#status {
 				margin-top: 20px;
 				font-weight: bold;
 				color: #a0ffa0;
-			}
-
-			#logArea {
-				margin-top: 20px;
-				width: 100%;
-				height: 300px;
-				padding: 10px;
-				font-family: monospace;
-				background: #000;
-				color: #0f0;
-				border: 1px solid #444;
-				resize: none;
-				white-space: pre-wrap;
 			}
 
 			#combinedURL {
@@ -128,6 +69,151 @@
 			#blogURL,
 			#ProxyURL {
 				color: #00ffd2;
+			}
+
+			/* Profile logs styles */
+			.profile-logs-container {
+				display: none;
+				margin-top: 20px;
+			}
+
+			.profile-logs-grid {
+				display: grid;
+				gap: 15px;
+				margin-top: 15px;
+				grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+			}
+
+			.profile-log-item {
+				background: #1a1a1a;
+				border: 1px solid #444;
+				border-radius: 8px;
+				padding: 15px;
+				min-height: 300px;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.profile-log-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 10px;
+				padding-bottom: 8px;
+				border-bottom: 1px solid #444;
+				flex-shrink: 0;
+			}
+
+			.profile-log-title {
+				font-weight: bold;
+				color: #4caf50;
+				font-size: 16px;
+			}
+
+			.profile-log-status {
+				padding: 4px 8px;
+				border-radius: 4px;
+				font-size: 12px;
+				font-weight: bold;
+			}
+
+			.profile-log-status.waiting {
+				background: #ff9800;
+				color: #000;
+			}
+
+			.profile-log-status.running {
+				background: #4caf50;
+				color: #fff;
+			}
+
+			.profile-log-status.completed {
+				background: #2196f3;
+				color: #fff;
+			}
+
+			.profile-log-status.error {
+				background: #f44336;
+				color: #fff;
+			}
+
+			.profile-log-area {
+				width: 100%;
+				height: 200px;
+				padding: 10px;
+				font-family: monospace;
+				background: #000;
+				color: #0f0;
+				border: 1px solid #333;
+				resize: none;
+				white-space: pre-wrap;
+				font-size: 12px;
+				flex: 1;
+				min-height: 200px;
+			}
+
+			/* Hide form during automation */
+			.automation-running .form-container {
+				display: none;
+			}
+
+			.automation-running .profile-logs-container {
+				display: block;
+			}
+
+			/* Progress indicator */
+			.progress-indicator {
+				display: none;
+				margin: 20px 0;
+				padding: 15px;
+				background: #1a1a1a;
+				border-radius: 8px;
+				border: 1px solid #444;
+			}
+
+			.progress-bar {
+				width: 100%;
+				height: 20px;
+				background: #333;
+				border-radius: 10px;
+				overflow: hidden;
+				margin: 10px 0;
+			}
+
+			.progress-fill {
+				height: 100%;
+				background: linear-gradient(90deg, #4caf50, #45a049);
+				transition: width 0.3s ease;
+				width: 0%;
+			}
+
+			.progress-text {
+				text-align: center;
+				font-weight: bold;
+				color: #4caf50;
+			}
+
+			.automation-running .progress-indicator {
+				display: block;
+			}
+
+			/* Responsive design for smaller screens */
+			@media (max-width: 768px) {
+				.profile-logs-grid {
+					grid-template-columns: 1fr;
+					gap: 10px;
+				}
+
+				.profile-log-item {
+					min-height: 250px;
+					padding: 10px;
+				}
+
+				.profile-log-area {
+					height: 150px;
+					min-height: 150px;
+					font-size: 11px;
+				}
 			}
 		</style>
 	</head>
@@ -266,7 +352,6 @@
 					<button type="submit" id="startButton">Start Automation</button>
 				</div>
 			</form>
-			<div class="form-overlay" id="formOverlay"></div>
 		</div>
 
 		<!-- Stop button outside the form container -->
@@ -288,18 +373,32 @@
 			Stop Automation
 		</button>
 
+		<!-- Progress indicator -->
+		<div class="progress-indicator" id="progressIndicator">
+			<div class="progress-text" id="progressText">Progress: 0%</div>
+			<div class="progress-bar">
+				<div class="progress-fill" id="progressFill"></div>
+			</div>
+		</div>
+
 		<div id="status">Status: Waiting...</div>
 
-		<label for="logArea">Automation Logs:</label>
-		<textarea id="logArea" readonly></textarea>
+		<!-- Profile logs container -->
+		<div class="profile-logs-container" id="profileLogsContainer">
+			<h3>📊 Automation Logs</h3>
+			<div class="profile-logs-grid" id="profileLogsGrid"></div>
+		</div>
 
 		<script>
 			const form = document.getElementById('automationForm');
 			const statusDiv = document.getElementById('status');
-			const logArea = document.getElementById('logArea');
 			const startButton = document.getElementById('startButton');
 			const stopButton = document.getElementById('stopButton');
-			const formOverlay = document.getElementById('formOverlay');
+			const profileLogsContainer = document.getElementById('profileLogsContainer');
+			const profileLogsGrid = document.getElementById('profileLogsGrid');
+			const progressIndicator = document.getElementById('progressIndicator');
+			const progressText = document.getElementById('progressText');
+			const progressFill = document.getElementById('progressFill');
 
 			// Set variables for default values
 			const blogURL =
@@ -307,32 +406,106 @@
 			const ProxyURL =
 				'http://api.scrape.do?token=de001754420e460597aa9e1984a01e5b5bf586fcb47&url=';
 
+			// Profile log areas
+			let profileLogs = new Map();
+			let currentProfilesCount = 0;
+			let logUpdateInterval = null;
+
+			// Function to create profile log areas
+			function createProfileLogs(profilesCount) {
+				profileLogsGrid.innerHTML = '';
+				profileLogs.clear();
+				currentProfilesCount = profilesCount;
+
+				for (let i = 1; i <= profilesCount; i++) {
+					const logItem = document.createElement('div');
+					logItem.className = 'profile-log-item';
+					logItem.innerHTML = `
+						<div class="profile-log-header">
+							<div class="profile-log-title">Profile ${i}</div>
+							<div class="profile-log-status waiting" id="profileStatus${i}">Waiting</div>
+						</div>
+						<textarea class="profile-log-area" id="profileLog${i}" readonly></textarea>
+					`;
+					profileLogsGrid.appendChild(logItem);
+
+					// Store reference to log area
+					profileLogs.set(i, document.getElementById(`profileLog${i}`));
+				}
+			}
+
+			// Function to append log to specific profile
+			function appendProfileLog(profileIndex, message) {
+				const logArea = profileLogs.get(profileIndex);
+				if (logArea) {
+					const timestamp = new Date().toLocaleTimeString();
+					logArea.value += `[${timestamp}] ${message}\n`;
+					logArea.scrollTop = logArea.scrollHeight;
+				}
+			}
+
+			// Function to update profile status
+			function updateProfileStatus(profileIndex, status, className) {
+				const statusElement = document.getElementById(`profileStatus${profileIndex}`);
+				if (statusElement) {
+					statusElement.textContent = status;
+					statusElement.className = `profile-log-status ${className}`;
+				}
+			}
+
+			// Function to fetch and update profile logs
+			async function updateProfileLogs() {
+				if (currentProfilesCount === 0) return;
+
+				try {
+					const response = await fetch('/logs/profiles');
+					const data = await response.json();
+
+					if (data.success && data.profileLogs) {
+						for (let i = 1; i <= currentProfilesCount; i++) {
+							const profileLog = data.profileLogs[i];
+							if (profileLog) {
+								const logArea = profileLogs.get(i);
+								if (logArea) {
+									logArea.value = profileLog;
+									logArea.scrollTop = logArea.scrollHeight;
+								}
+							}
+						}
+					}
+				} catch (error) {
+					console.error('Failed to fetch profile logs:', error);
+				}
+			}
+
+			// Function to start log updates
+			function startLogUpdates() {
+				if (logUpdateInterval) {
+					clearInterval(logUpdateInterval);
+				}
+				logUpdateInterval = setInterval(updateProfileLogs, 2000);
+			}
+
+			// Function to stop log updates
+			function stopLogUpdates() {
+				if (logUpdateInterval) {
+					clearInterval(logUpdateInterval);
+					logUpdateInterval = null;
+				}
+			}
+
 			// Function to enable/disable form during automation
 			function setAutomationState(isRunning) {
-				const formInputs = form.querySelectorAll('input, select, textarea');
-
 				if (isRunning) {
-					form.classList.add('form-disabled');
-					formOverlay.style.display = 'block';
+					document.body.classList.add('automation-running');
 					startButton.style.display = 'none';
 					stopButton.style.display = 'block';
-
-					// Disable all form inputs
-					formInputs.forEach((input) => {
-						input.disabled = true;
-					});
+					startLogUpdates();
 				} else {
-					form.classList.remove('form-disabled');
-					formOverlay.style.display = 'none';
+					document.body.classList.remove('automation-running');
 					startButton.style.display = 'block';
 					stopButton.style.display = 'none';
-
-					// Re-enable all form inputs except the combinedURL (which should stay disabled)
-					formInputs.forEach((input) => {
-						if (input.id !== 'combinedURL') {
-							input.disabled = false;
-						}
-					});
+					stopLogUpdates();
 				}
 			}
 
@@ -345,12 +518,6 @@
 			}
 			document.getElementById('blogURL').addEventListener('input', updateCombinedURL);
 			updateCombinedURL();
-
-			function appendLog(message) {
-				const timestamp = new Date().toLocaleTimeString();
-				logArea.value += `[${timestamp}] ${message}\n`;
-				logArea.scrollTop = logArea.scrollHeight;
-			}
 
 			async function checkStatus() {
 				try {
@@ -373,6 +540,11 @@
 						}
 
 						statusDiv.innerText = `${progressText} | ${activeText} | ${activeDetails}`;
+
+						// Update progress bar
+						progressFill.style.width = `${data.progress}%`;
+						progressText.textContent = `Progress: ${data.progress}% (${data.completedWindows}/${data.totalWindows})`;
+
 						setAutomationState(true);
 					} else if (data.status === 'idle') {
 						statusDiv.innerText = 'Status: Ready to start automation...';
@@ -392,8 +564,6 @@
 			// Stop automation button handler
 			stopButton.addEventListener('click', async () => {
 				try {
-					appendLog('🛑 Stop automation requested...');
-
 					const response = await fetch('/stop-automation', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' }
@@ -402,14 +572,13 @@
 					const result = await response.json();
 
 					if (result.success) {
-						appendLog('✅ Automation stopped successfully');
 						statusDiv.innerText = 'Status: Automation stopped';
 						setAutomationState(false);
 					} else {
-						appendLog(`❌ Failed to stop automation: ${result.error}`);
+						console.error(`Failed to stop automation: ${result.error}`);
 					}
 				} catch (err) {
-					appendLog(`❌ Error stopping automation: ${err.message}`);
+					console.error(`Error stopping automation: ${err.message}`);
 				}
 			});
 
@@ -417,6 +586,10 @@
 				e.preventDefault();
 				const formData = new FormData(form);
 				const payload = Object.fromEntries(formData.entries());
+
+				// Get profiles count and create log areas
+				const profilesCount = parseInt(payload.profilesAtOnce) || 2;
+				createProfileLogs(profilesCount);
 
 				// Immediately set automation state to prevent button flickering
 				setAutomationState(true);
@@ -432,27 +605,32 @@
 					const result = await res.json();
 
 					if (result.success) {
-						appendLog(`Started automation on: ${result.url}`);
-						appendLog(
-							`Browser: ${result.browser}, Cycles: ${result.cycles}, Profiles per Cycle: ${result.profiles}`
-						);
-						appendLog(
-							`📊 Total Profiles: ${result.cycles * result.profiles} (${
-								result.cycles
-							} cycles × ${result.profiles} profiles each)`
-						);
-						appendLog(`⏱️ Website Loading Timeout: ${result.timeout} seconds`);
-						appendLog(
-							`⏰ Wait Time Range: ${result.minWait} - ${result.maxWait} seconds per profile`
-						);
+						// Log to all profile areas initially
+						for (let i = 1; i <= profilesCount; i++) {
+							appendProfileLog(i, `🚀 Starting Profile ${i}`);
+							appendProfileLog(
+								i,
+								`📊 Total Profiles: ${result.cycles * result.profiles} (${
+									result.cycles
+								} cycles × ${result.profiles} profiles each)`
+							);
+							appendProfileLog(
+								i,
+								`⏱️ Website Loading Timeout: ${result.timeout} seconds`
+							);
+							appendProfileLog(
+								i,
+								`⏰ Wait Time Range: ${result.minWait} - ${result.maxWait} seconds per profile`
+							);
+						}
 					} else {
-						appendLog(`❌ Failed: ${result.error}`);
+						console.error(`Failed: ${result.error}`);
 						// Reset state if automation failed to start
 						setAutomationState(false);
 						statusDiv.innerText = 'Status: Failed to start automation';
 					}
 				} catch (err) {
-					appendLog(`❌ Error: ${err.message}`);
+					console.error(`Error: ${err.message}`);
 					// Reset state if there was an error
 					setAutomationState(false);
 					statusDiv.innerText = 'Status: Error starting automation';

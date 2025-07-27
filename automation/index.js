@@ -17,6 +17,7 @@ const {
 const activeWindows = new Map();
 let totalWindows = 0;
 let completedWindows = 0;
+let failedWindows = 0; // Track failed profiles
 let isAutomationInProgress = false; // Track if automation is in progress
 let currentCycle = 0; // Track current cycle
 let profilesPerCycle = 0; // Track profiles per cycle
@@ -62,6 +63,7 @@ async function processWindow(
 		if (shouldStop) {
 			log(`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -73,6 +75,7 @@ async function processWindow(
 		if (!browserChoice) {
 			log(`❌ Invalid browser selection for Profile ${cycleSpecificIndex}`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -91,6 +94,7 @@ async function processWindow(
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -108,6 +112,7 @@ async function processWindow(
 				log(`⚠️ Error closing browser after launch: ${e.message}`, windowIndex);
 			}
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -121,6 +126,7 @@ async function processWindow(
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -138,6 +144,7 @@ async function processWindow(
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -150,6 +157,7 @@ async function processWindow(
 				windowIndex
 			);
 			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -189,6 +197,7 @@ async function processWindow(
 					windowIndex
 				);
 				updateProfileStatus(windowIndex, 'failed');
+				failedWindows++; // Increment failed count
 				return;
 			}
 
@@ -223,6 +232,7 @@ async function processWindow(
 						windowIndex
 					);
 					updateProfileStatus(windowIndex, 'failed');
+					failedWindows++; // Increment failed count
 					return;
 				}
 				throw navError; // Re-throw other navigation errors
@@ -235,6 +245,7 @@ async function processWindow(
 					windowIndex
 				);
 				updateProfileStatus(windowIndex, 'failed');
+				failedWindows++; // Increment failed count
 				return;
 			}
 
@@ -269,7 +280,7 @@ async function processWindow(
 
 			log(errorMessage, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
-			// Don't track this window if navigation failed
+			failedWindows++; // Increment failed count
 			return;
 		}
 
@@ -301,6 +312,7 @@ async function processWindow(
 			windowIndex
 		);
 		updateProfileStatus(windowIndex, 'failed');
+		failedWindows++; // Increment failed count
 	} finally {
 		// Clean up resources
 		try {
@@ -367,6 +379,7 @@ async function runAutomation(config) {
 
 	totalWindows = totalCycles * profilesPerCycle;
 	completedWindows = 0;
+	failedWindows = 0; // Reset failed count
 	isAutomationInProgress = true; // Set automation as in progress
 	currentCycle = 1; // Initialize current cycle to 1
 	updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
@@ -433,6 +446,7 @@ async function runAutomation(config) {
 	// Reset automation state to show start button
 	activeWindows.clear();
 	completedWindows = 0;
+	failedWindows = 0; // Reset failed count
 	totalWindows = 0;
 	isAutomationInProgress = false; // Mark automation as completed
 }
@@ -487,6 +501,7 @@ function getStatus() {
 	return {
 		totalWindows,
 		completedWindows,
+		failedWindows, // Add failedWindows to the status
 		activeWindows: activeWindows.size,
 		progress: totalWindows > 0 ? Math.round((completedWindows / totalWindows) * 100) : 0,
 		activeWindowDetails,

@@ -10,6 +10,22 @@ let totalWindows = 0;
 let completedWindows = 0;
 let isAutomationInProgress = false; // Track if automation is in progress
 
+// Stop functionality variables
+let shouldStop = false;
+let activeBrowsers = [];
+
+// Function to stop automation
+function stopAutomation() {
+	shouldStop = true;
+	log('🛑 Stop automation requested...');
+}
+
+// Function to reset stop state
+function resetStopState() {
+	shouldStop = false;
+	activeBrowsers = [];
+}
+
 // Function to process a single window
 async function processWindow(
 	windowIndex,
@@ -25,6 +41,12 @@ async function processWindow(
 	let page = null;
 
 	try {
+		// Check if stop was requested before starting
+		if (shouldStop) {
+			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped`);
+			return;
+		}
+
 		log(`🚀 Opening Profile ${windowIndex} (Cycle ${cycle})`);
 
 		// Select browser for this specific window
@@ -39,14 +61,54 @@ async function processWindow(
 		const fingerprint = await generateFingerprint(proxyURL);
 		const userAgent = randomUA.getRandom();
 
+		// Check if stop was requested before launching browser
+		if (shouldStop) {
+			log(`⏹️ Skipping Profile ${windowIndex} - automation stopped before browser launch`);
+			return;
+		}
+
 		browserInstance = await browserChoice.launcher.launch({ headless: false });
+
+		// Check if stop was requested after browser launch
+		if (shouldStop) {
+			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after browser launch`);
+			try {
+				await browserInstance.close();
+			} catch (e) {
+				log(`⚠️ Error closing browser after launch: ${e.message}`);
+			}
+			return;
+		}
+
+		// Add to active browsers for stop functionality
+		activeBrowsers.push(browserInstance);
+
+		// Check if stop was requested before creating context
+		if (shouldStop) {
+			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped before context creation`);
+			return;
+		}
+
 		context = await browserInstance.newContext({
 			userAgent,
 			viewport: fingerprint.screen,
 			locale: fingerprint.browserLanguages[0],
 			timezoneId: fingerprint.timezone
 		});
+
+		// Check if stop was requested after context creation
+		if (shouldStop) {
+			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after context creation`);
+			return;
+		}
+
 		page = await context.newPage();
+
+		// Check if stop was requested after page creation
+		if (shouldStop) {
+			log(`⏹️ Stopping Profile ${windowIndex} - automation stopped after page creation`);
+			return;
+		}
 
 		await page.addInitScript((langs) => {
 			Object.defineProperty(navigator, 'languages', {
@@ -76,11 +138,57 @@ async function processWindow(
 
 		// Navigate to the page with proper error handling
 		try {
-			await page.goto(combinedURL, {
+			// Check if stop was requested before starting navigation
+			if (shouldStop) {
+				log(`⏹️ Stopping Profile ${windowIndex} before navigation - automation stopped`);
+				return;
+			}
+
+			// Navigate to the page with stop checking
+			const navigationPromise = page.goto(combinedURL, {
 				waitUntil: 'load',
 				timeout: timeout * 1000 // Convert seconds to milliseconds
 			});
+
+			// Wait for navigation with stop checking
+			try {
+				await Promise.race([
+					navigationPromise,
+					new Promise((_, reject) => {
+						// Check for stop every 500ms during navigation
+						const checkStop = () => {
+							if (shouldStop) {
+								reject(new Error('STOP_REQUESTED'));
+							} else {
+								setTimeout(checkStop, 500);
+							}
+						};
+						checkStop();
+					})
+				]);
+			} catch (navError) {
+				if (navError.message === 'STOP_REQUESTED') {
+					log(
+						`⏹️ Stopping Profile ${windowIndex} during navigation - automation stopped`
+					);
+					return;
+				}
+				throw navError; // Re-throw other navigation errors
+			}
+
+			// Check if stop was requested after page load
+			if (shouldStop) {
+				log(`⏹️ Stopping Profile ${windowIndex} after navigation - automation stopped`);
+				return;
+			}
+
 			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
+
+			// Check if stop was requested after page load
+			if (shouldStop) {
+				log(`⏹️ Stopping Profile ${windowIndex} - automation stopped`);
+				return;
+			}
 
 			// 🎯 CRITICAL FIX: Start tracking AFTER page is loaded
 			// Track this window ONLY after successful page load
@@ -107,8 +215,8 @@ async function processWindow(
 			usableScrollTime -= 5;
 		}
 
-		// Only attempt scrolling if page is still available
-		if (page && !page.isClosed()) {
+		// Only attempt scrolling if page is still available and not stopped
+		if (page && !page.isClosed() && !shouldStop) {
 			await simulateHumanScroll(page, usableScrollTime);
 			await page.waitForTimeout(1000);
 		}
@@ -143,6 +251,11 @@ async function processWindow(
 		try {
 			if (browserInstance) {
 				await browserInstance.close();
+				// Remove from active browsers
+				const index = activeBrowsers.indexOf(browserInstance);
+				if (index > -1) {
+					activeBrowsers.splice(index, 1);
+				}
 			}
 		} catch (closeBrowserErr) {
 			log(
@@ -175,8 +288,17 @@ async function runAutomation(config) {
 	completedWindows = 0;
 	isAutomationInProgress = true; // Set automation as in progress
 
+	// Reset stop state at the beginning
+	resetStopState();
+
 	// Run automation cycles
 	for (let cycle = 1; cycle <= totalCycles; cycle++) {
+		// Check if stop was requested before starting this cycle
+		if (shouldStop) {
+			log(`⏹️ Stopping automation - cycle ${cycle} cancelled`);
+			break;
+		}
+
 		log(`🔄 Starting Cycle ${cycle}/${totalCycles}`);
 
 		// Create promises for all profiles in this cycle
@@ -195,22 +317,67 @@ async function runAutomation(config) {
 		);
 
 		await Promise.allSettled(promises);
+
+		// Check if stop was requested after this cycle
+		if (shouldStop) {
+			log(`⏹️ Stopping automation after cycle ${cycle}`);
+			break;
+		}
+
 		log(`✅ Cycle ${cycle} completed`);
 
 		// Small delay between cycles (except for the last cycle)
-		if (cycle < totalCycles) {
+		if (cycle < totalCycles && !shouldStop) {
 			log(`🕔 Waiting 5s before Cycle ${cycle + 1}...`);
 			await new Promise((r) => setTimeout(r, 5000));
 		}
 	}
 
-	log(`🎉 All ${totalCycles} cycles completed successfully!`);
+	if (shouldStop) {
+		log(`🛑 Automation stopped by user request`);
+	} else {
+		log(`🎉 All ${totalCycles} cycles completed successfully!`);
+	}
 
 	// Reset automation state to show start button
 	activeWindows.clear();
 	completedWindows = 0;
 	totalWindows = 0;
 	isAutomationInProgress = false; // Mark automation as completed
+}
+
+// Function to stop all active browsers
+async function stopAllBrowsers() {
+	log(`🛑 Closing ${activeBrowsers.length} active browsers...`);
+
+	const closePromises = activeBrowsers.map(async (browser, index) => {
+		try {
+			// Try to close gracefully first
+			await Promise.race([
+				browser.close(),
+				new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+			]);
+			log(`✅ Browser ${index + 1} closed successfully`);
+		} catch (e) {
+			log(`⚠️ Error closing browser ${index + 1}: ${e.message}`);
+			// Try force kill if graceful close fails
+			try {
+				await browser.kill();
+				log(`🔨 Browser ${index + 1} force killed`);
+			} catch (killError) {
+				log(`❌ Failed to force kill browser ${index + 1}: ${killError.message}`);
+			}
+		}
+	});
+
+	// Wait for all browsers to close with a maximum timeout
+	await Promise.race([
+		Promise.allSettled(closePromises),
+		new Promise((resolve) => setTimeout(resolve, 10000)) // 10 second total timeout
+	]);
+
+	activeBrowsers = [];
+	log(`🛑 All browsers closed. Active browsers: ${activeBrowsers.length}`);
 }
 
 function getStatus() {
@@ -238,8 +405,9 @@ function getStatus() {
 				: 'preparing'
 			: completedWindows > 0
 			? 'completed'
-			: 'idle'
+			: 'idle',
+		shouldStop
 	};
 }
 
-module.exports = { runAutomation, getStatus };
+module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers };

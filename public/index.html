@@ -393,9 +393,21 @@
 			stopButton.addEventListener('click', async () => {
 				try {
 					appendLog('🛑 Stop automation requested...');
-					// TODO: Implement stop automation logic
-					// For now, just log the request
-					appendLog('⚠️ Stop functionality will be implemented soon');
+
+					const response = await fetch('/stop-automation', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' }
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						appendLog('✅ Automation stopped successfully');
+						statusDiv.innerText = 'Status: Automation stopped';
+						setAutomationState(false);
+					} else {
+						appendLog(`❌ Failed to stop automation: ${result.error}`);
+					}
 				} catch (err) {
 					appendLog(`❌ Error stopping automation: ${err.message}`);
 				}

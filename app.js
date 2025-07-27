@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const openUrlRoute = require('./routes/openUrl');
 const logsRoute = require('./routes/logs');
 const automationStatusRoute = require('./routes/status');
+const stopRoute = require('./routes/stop');
 
 // Middleware
 app.use(bodyParser.json());
@@ -22,6 +23,8 @@ app.use('/open-url', openUrlRoute);
 app.use('/logs', logsRoute);
 // Automation status
 app.use('/automation-status', automationStatusRoute);
+// Stop automation
+app.use('/stop-automation', stopRoute);
 
 // Root UI page
 app.get('/', (req, res) => {

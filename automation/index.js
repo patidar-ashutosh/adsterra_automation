@@ -39,14 +39,6 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 		});
 		page = await context.newPage();
 
-		// Track this window
-		activeWindows.set(windowIndex, {
-			browserInstance,
-			startTime: Date.now(),
-			waitTime,
-			cycle
-		});
-
 		await page.addInitScript((langs) => {
 			Object.defineProperty(navigator, 'languages', {
 				get: () => langs
@@ -80,9 +72,21 @@ async function processWindow(windowIndex, browser, combinedURL, proxyURL, waitTi
 				timeout: 30000 // 30 second timeout
 			});
 			log(`🌐 Page loaded for Profile ${windowIndex} (Cycle ${cycle})`);
+
+			// 🎯 CRITICAL FIX: Start tracking AFTER page is loaded
+			// Track this window ONLY after successful page load
+			activeWindows.set(windowIndex, {
+				browserInstance,
+				startTime: Date.now(), // Timer starts NOW, after page load
+				waitTime,
+				cycle
+			});
+
+			log(`⏱️ Wait timer started for Profile ${windowIndex} (${waitTime}s allocated)`);
 		} catch (navError) {
 			log(`⚠️ Navigation failed for Profile ${windowIndex}: ${navError.message}`);
-			// Continue with the process even if navigation fails
+			// Don't track this window if navigation failed
+			return;
 		}
 
 		log(`🕒 Time allocated: ${waitTime}s`);
@@ -191,7 +195,8 @@ function getStatus() {
 			windowIndex,
 			elapsed: Math.round(elapsed),
 			remaining,
-			waitTime: data.waitTime
+			waitTime: data.waitTime,
+			cycle: data.cycle
 		};
 	});
 
@@ -200,7 +205,8 @@ function getStatus() {
 		completedWindows,
 		activeWindows: activeWindows.size,
 		progress: totalWindows > 0 ? Math.round((completedWindows / totalWindows) * 100) : 0,
-		activeWindowDetails
+		activeWindowDetails,
+		status: activeWindows.size > 0 ? 'running' : completedWindows > 0 ? 'completed' : 'idle'
 	};
 }
 

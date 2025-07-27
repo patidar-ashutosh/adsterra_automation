@@ -15,14 +15,25 @@ async function generateFingerprint(proxyURL = '') {
 	const fonts = ['Arial', 'Verdana', 'Tahoma', 'Times New Roman', 'Courier New'];
 
 	let timezone = 'UTC';
-	try {
-		const ip = proxyURL.replace(/^http(s)?:\/\//, '').split(':')[0];
-		const geoRes = await axios.get(`http://ip-api.com/json/${ip}`);
-		if (geoRes.data && geoRes.data.timezone) {
-			timezone = geoRes.data.timezone;
+
+	// Only try to get timezone if proxyURL is provided and valid
+	if (proxyURL && proxyURL.trim() !== '') {
+		try {
+			const ip = proxyURL.replace(/^http(s)?:\/\//, '').split(':')[0];
+
+			// Validate IP format
+			if (ip && ip !== '') {
+				const geoRes = await axios.get(`http://ip-api.com/json/${ip}`, {
+					timeout: 5000 // 5 second timeout
+				});
+				if (geoRes.data && geoRes.data.timezone) {
+					timezone = geoRes.data.timezone;
+				}
+			}
+		} catch (err) {
+			console.warn('⚠️ Failed to fetch timezone from IP:', err.message);
+			// Continue with default timezone
 		}
-	} catch (err) {
-		console.warn('⚠️ Failed to fetch timezone from IP:', err.message);
 	}
 
 	return {

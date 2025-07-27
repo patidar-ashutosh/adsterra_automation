@@ -4,28 +4,74 @@ const router = express.Router();
 const { runAutomation } = require('../automation');
 
 router.post('/', async (req, res) => {
-	const { blogURL, ProxyURL, browser, openCount, profilesAtOnce } = req.body;
+	try {
+		const { blogURL, ProxyURL, browser, openCount, profilesAtOnce } = req.body;
 
-	if (!blogURL || !ProxyURL) {
-		return res.status(400).json({ error: 'Missing blogURL or ProxyURL' });
+		// Input validation
+		if (!blogURL || !ProxyURL) {
+			return res.status(400).json({
+				success: false,
+				error: 'Missing blogURL or ProxyURL'
+			});
+		}
+
+		// Validate URL format
+		try {
+			new URL(blogURL);
+		} catch (urlError) {
+			return res.status(400).json({
+				success: false,
+				error: 'Invalid blogURL format'
+			});
+		}
+
+		// Validate numeric inputs
+		const cycles = parseInt(openCount) || 1;
+		const profiles = parseInt(profilesAtOnce) || 1;
+
+		if (cycles < 1 || cycles > 20) {
+			return res.status(400).json({
+				success: false,
+				error: 'openCount must be between 1 and 20'
+			});
+		}
+
+		if (profiles < 1 || profiles > 10) {
+			return res.status(400).json({
+				success: false,
+				error: 'profilesAtOnce must be between 1 and 10'
+			});
+		}
+
+		// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
+		const combinedURL = 'https://apkmody.com/';
+
+		// Send initial response
+		res.json({
+			success: true,
+			started: true,
+			url: combinedURL,
+			cycles,
+			profiles
+		});
+
+		// Run automation in background
+		runAutomation({
+			url: combinedURL,
+			proxyURL: ProxyURL,
+			browser,
+			openCount: cycles,
+			profilesAtOnce: profiles
+		}).catch((err) => {
+			console.error('Automation error:', err);
+		});
+	} catch (error) {
+		console.error('Route error:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Internal server error'
+		});
 	}
-
-	// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
-	const combinedURL = 'https://apkmody.com/';
-
-	// Send initial response
-	res.json({ success: true, started: true });
-
-	// Run automation in background
-	runAutomation({
-		url: combinedURL,
-		proxyURL: ProxyURL,
-		browser,
-		openCount,
-		profilesAtOnce
-	}).catch((err) => {
-		console.error('Automation error:', err);
-	});
 });
 
 module.exports = router;

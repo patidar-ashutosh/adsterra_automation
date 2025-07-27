@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const openUrlRoute = require('./routes/openUrl');
 const logsRoute = require('./routes/logs');
@@ -25,9 +25,54 @@ app.use('/automation-status', automationStatusRoute);
 
 // Root UI page
 app.get('/', (req, res) => {
-	res.sendFile(path.join(__dirname, 'public', 'index.html'));
+	try {
+		res.sendFile(path.join(__dirname, 'public', 'index.html'));
+	} catch (error) {
+		console.error('Error serving index.html:', error);
+		res.status(500).send('Internal server error');
+	}
 });
 
-app.listen(PORT, () => {
-	console.log(`✅ Server running at http://localhost:${PORT}`);
+// Error handling middleware
+app.use((error, req, res, next) => {
+	console.error('Unhandled error:', error);
+	res.status(500).json({
+		success: false,
+		error: 'Internal server error'
+	});
+});
+
+// 404 handler
+app.use((req, res) => {
+	res.status(404).json({
+		success: false,
+		error: 'Route not found'
+	});
+});
+
+// Start server with error handling
+const server = app
+	.listen(PORT, () => {
+		console.log(`✅ Server running at http://localhost:${PORT}`);
+	})
+	.on('error', (error) => {
+		console.error('❌ Server failed to start:', error);
+		process.exit(1);
+	});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+	console.log('🔄 Shutting down server gracefully...');
+	server.close(() => {
+		console.log('✅ Server closed');
+		process.exit(0);
+	});
+});
+
+process.on('SIGINT', () => {
+	console.log('🔄 Shutting down server gracefully...');
+	server.close(() => {
+		console.log('✅ Server closed');
+		process.exit(0);
+	});
 });

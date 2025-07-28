@@ -254,6 +254,11 @@
 				color: #fff;
 			}
 
+			.profile-log-status.success {
+				background: linear-gradient(135deg, #2196f3, #1976d2);
+				color: #fff;
+			}
+
 			.profile-log-area {
 				width: 100%;
 				height: 250px;
@@ -367,6 +372,11 @@
 
 			.failed-text {
 				color: #ff8f00;
+				font-weight: bold;
+			}
+
+			.success-text {
+				color: #2196f3;
 				font-weight: bold;
 			}
 
@@ -624,6 +634,24 @@
 				background: linear-gradient(135deg, #d32f2f, #f44336);
 				box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
 			}
+
+			.status-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 15px;
+			}
+
+			.status-row span {
+				flex: 1;
+				text-align: center;
+				padding: 8px 12px;
+				border-radius: 8px;
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				font-size: 13px;
+				font-weight: 600;
+			}
 		</style>
 	</head>
 	<body>
@@ -789,15 +817,22 @@
 					<div class="progress-section">
 						<div class="section-title">Progress & Cycle</div>
 						<div class="section-content">
-							<div class="progress-text" id="progressText">Progress: 0%</div>
-							<div class="cycle-text" id="cycleText">Current Cycle: 1</div>
+							<div class="status-row">
+								<span class="progress-text" id="progressText">Progress: 0%</span>
+								<span class="cycle-text" id="cycleText">Current Cycle: 1</span>
+							</div>
 						</div>
 					</div>
 					<div class="progress-section">
 						<div class="section-title">Profile Status</div>
 						<div class="section-content">
-							<div class="completed-text" id="completedText">Completed: 0/0</div>
-							<div class="failed-text" id="failedText">Failed: 0</div>
+							<div class="status-row">
+								<span class="completed-text" id="completedText"
+									>Completed: 0/0</span
+								>
+								<span class="success-text" id="successText">Success: 0</span>
+								<span class="failed-text" id="failedText">Failed: 0</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -844,6 +879,7 @@
 			const cycleText = document.getElementById('cycleText');
 			const completedText = document.getElementById('completedText');
 			const failedText = document.getElementById('failedText');
+			const successText = document.getElementById('successText');
 
 			// Popup elements
 			const popupOverlay = document.getElementById('popupOverlay');
@@ -981,6 +1017,8 @@
 										className = 'running';
 									} else if (status === 'completed') {
 										className = 'completed';
+									} else if (status === 'success') {
+										className = 'success';
 									} else if (status === 'failed') {
 										className = 'error';
 									}
@@ -1083,12 +1121,12 @@
 						statusDiv.innerText = `Status: Automation completed ✅ (${
 							data.completedWindows
 						}/${data.totalWindows} profiles completed, ${
-							data.failedWindows || 0
-						} failed across all cycles)`;
+							data.successWindows || 0
+						} successful, ${data.failedWindows || 0} failed across all cycles)`;
 						setAutomationState(false);
 					} else if (data.activeWindows > 0) {
 						// Create status with only active window details
-						let statusText = `Active: ${data.activeWindows} profiles`;
+						let statusText = `Running: ${data.activeWindows} profiles`;
 
 						// Add active window details in compact format
 						if (data.activeWindowDetails && data.activeWindowDetails.length > 0) {
@@ -1107,6 +1145,7 @@
 						progressText.textContent = `Progress: ${data.progress}%`;
 						cycleText.textContent = `Current Cycle: ${data.currentCycle || 1}`;
 						completedText.textContent = `Completed: ${data.completedWindows}/${data.totalWindows}`;
+						successText.textContent = `Success: ${data.successWindows || 0}`;
 						failedText.textContent = `Failed: ${data.failedWindows || 0}`;
 
 						setAutomationState(true);
@@ -1119,7 +1158,7 @@
 						setAutomationState(true);
 					}
 
-					setTimeout(checkStatus, 2000);
+					setTimeout(checkStatus, 500);
 				} catch (error) {
 					console.error('Status check failed:', error);
 					statusDiv.innerText = 'Status: Error checking status...';

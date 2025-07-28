@@ -1,9 +1,7 @@
+add a country selection opetion
+
 Add mobile emulation (iPhone, Android)
 
-Simulated mouse hover or clicks
+Random comment's typing use llm
 
-Random keyboard typing
-
-Adding scroll up/down behavior
-
-Exporting logs or performance data
+show open side popup. we user can se broswer name, and all fringerprint details

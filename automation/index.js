@@ -13,6 +13,7 @@ const {
 	clearProfileLogs,
 	updateGlobalCycleInfo
 } = require('../utils/helpers');
+const injectFingerprint = require('../utils/injectFingerprint');
 
 const activeWindows = new Map();
 let totalWindows = 0;
@@ -85,8 +86,8 @@ async function processWindow(
 			windowIndex
 		);
 
-		const fingerprint = await generateFingerprint(proxyURL);
-		const userAgent = randomUA.getRandom();
+		const fingerprint = await generateFingerprint(proxyURL, browserChoice.name, 'desktop');
+		const userAgent = fingerprint.userAgent;
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
@@ -135,7 +136,10 @@ async function processWindow(
 			userAgent,
 			viewport: fingerprint.screen,
 			locale: fingerprint.browserLanguages[0],
-			timezoneId: fingerprint.timezone
+			timezoneId: fingerprint.timezone,
+			deviceScaleFactor: fingerprint.deviceScaleFactor || 1,
+			isMobile: fingerprint.isMobile || false,
+			hasTouch: fingerprint.hasTouch || false
 		});
 
 		// Check if stop was requested after context creation
@@ -163,31 +167,7 @@ async function processWindow(
 		}
 
 		// Inject fingerprint scripts
-		await page.addInitScript((langs) => {
-			Object.defineProperty(navigator, 'languages', {
-				get: () => langs
-			});
-		}, fingerprint.browserLanguages);
-
-		await page.addInitScript(({ vendor, renderer }) => {
-			const getParameterProxyHandler = {
-				apply: function (target, ctx, args) {
-					const param = args[0];
-					if (param === 37445) return vendor;
-					if (param === 37446) return renderer;
-					return Reflect.apply(target, ctx, args);
-				}
-			};
-			const canvas = document.createElement('canvas');
-			const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-			if (gl) {
-				const ext = gl.getExtension('WEBGL_debug_renderer_info');
-				if (ext) {
-					const originalGetParameter = gl.getParameter;
-					gl.getParameter = new Proxy(originalGetParameter, getParameterProxyHandler);
-				}
-			}
-		}, fingerprint.webGLMetadata);
+		await injectFingerprint(page, fingerprint);
 
 		// Navigate to the page with proper error handling
 		try {

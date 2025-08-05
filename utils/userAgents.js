@@ -9,11 +9,15 @@ function generateUserAgent({
 	let userAgent;
 
 	try {
+		browserName = mapBrowserName(browserName);
+
 		userAgent = new UserAgent({
-			deviceCategory,
-			platform,
-			browserName,
-			language
+			filter: {
+				browserName,
+				deviceCategory,
+				platform,
+				language
+			}
 		});
 	} catch (err) {
 		console.warn('⚠️ No exact match found, falling back to random user agent.');
@@ -28,6 +32,19 @@ function generateUserAgent({
 		os: userAgent.data.os || 'Windows',
 		browser: userAgent.data.browser || 'Chrome'
 	};
+}
+
+function mapBrowserName(engineName) {
+	switch (engineName.toLowerCase()) {
+		case 'chromium':
+			return 'Chrome';
+		case 'firefox':
+			return 'Firefox';
+		case 'webkit':
+			return 'Safari';
+		default:
+			return engineName; // fallback to original name if unknown
+	}
 }
 
 module.exports = generateUserAgent;

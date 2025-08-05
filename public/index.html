@@ -970,8 +970,7 @@
 			function appendProfileLog(profileIndex, message) {
 				const logArea = profileLogs.get(profileIndex);
 				if (logArea) {
-					const timestamp = new Date().toLocaleTimeString();
-					logArea.value += `[${timestamp}] ${message}\n`;
+					logArea.value += `${message}\n`;
 					logArea.scrollTop = logArea.scrollHeight;
 				}
 			}
@@ -1312,20 +1311,6 @@
 							// Log to all profile areas initially
 							for (let i = 1; i <= profilesCount; i++) {
 								appendProfileLog(i, `🚀 Starting Profile ${i}`);
-								appendProfileLog(
-									i,
-									`📊 Total Profiles: ${result.cycles * result.profiles} (${
-										result.cycles
-									} cycles × ${result.profiles} profiles each)`
-								);
-								appendProfileLog(
-									i,
-									`⏱️ Website Loading Timeout: ${result.timeout} seconds`
-								);
-								appendProfileLog(
-									i,
-									`⏰ Wait Time Range: ${result.minWait} - ${result.maxWait} seconds per profile`
-								);
 								appendProfileLog(i, `⏳ Waiting for automation to start...`);
 							}
 						} else {

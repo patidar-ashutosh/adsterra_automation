@@ -86,41 +86,26 @@ async function processWindow(
 			windowIndex
 		);
 
-		log(`🔧 Generating fingerprint for Profile ${cycleSpecificIndex}...`, windowIndex);
 		const fingerprint = await generateFingerprint(proxyURL, browserChoice.name, 'desktop');
 		const userAgent = fingerprint.userAgent;
-		log(
-			`📱 Fingerprint generated - Screen: ${fingerprint.screen.width}x${fingerprint.screen.height}, Timezone: ${fingerprint.timezone}`,
-			windowIndex
-		);
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
-			log(
-				`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped before browser launch`,
-				windowIndex
-			);
+			log(`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
 		}
 
-		log(
-			`🚀 Launching ${browserChoice.name} browser for Profile ${cycleSpecificIndex}...`,
-			windowIndex
-		);
 		browserInstance = await browserChoice.launcher.launch({ headless: false });
 
 		// Check if stop was requested after browser launch
 		if (shouldStop) {
-			log(
-				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after browser launch`,
-				windowIndex
-			);
+			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			try {
 				await browserInstance.close();
 			} catch (e) {
-				log(`⚠️ Error closing browser after launch: ${e.message}`, windowIndex);
+				log(`⚠️ Error closing browser: ${e.message}`, windowIndex);
 			}
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
@@ -132,19 +117,12 @@ async function processWindow(
 
 		// Check if stop was requested before creating context
 		if (shouldStop) {
-			log(
-				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped before context creation`,
-				windowIndex
-			);
+			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
 		}
 
-		log(
-			`🔧 Creating browser context with fingerprint for Profile ${cycleSpecificIndex}...`,
-			windowIndex
-		);
 		context = await browserInstance.newContext({
 			userAgent,
 			viewport: fingerprint.screen,
@@ -157,42 +135,30 @@ async function processWindow(
 
 		// Check if stop was requested after context creation
 		if (shouldStop) {
-			log(
-				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after context creation`,
-				windowIndex
-			);
+			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
 		}
 
-		log(`📄 Creating new page for Profile ${cycleSpecificIndex}...`, windowIndex);
 		page = await context.newPage();
 
 		// Check if stop was requested after page creation
 		if (shouldStop) {
-			log(
-				`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped after page creation`,
-				windowIndex
-			);
+			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
 		}
 
-		log(`🔒 Injecting fingerprint scripts for Profile ${cycleSpecificIndex}...`, windowIndex);
 		// Inject fingerprint scripts
 		await injectFingerprint(page, fingerprint);
-		log(`✅ Fingerprint injection completed for Profile ${cycleSpecificIndex}`, windowIndex);
 
 		// Navigate to the page with proper error handling
 		try {
 			// Check if stop was requested before starting navigation
 			if (shouldStop) {
-				log(
-					`⏹️ Stopping Profile ${cycleSpecificIndex} before navigation - automation stopped`,
-					windowIndex
-				);
+				log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 				updateProfileStatus(windowIndex, 'failed');
 				failedWindows++; // Increment failed count
 				return;
@@ -225,7 +191,7 @@ async function processWindow(
 			} catch (navError) {
 				if (navError.message === 'STOP_REQUESTED') {
 					log(
-						`⏹️ Stopping Profile ${cycleSpecificIndex} during navigation - automation stopped`,
+						`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`,
 						windowIndex
 					);
 					updateProfileStatus(windowIndex, 'failed');
@@ -237,10 +203,7 @@ async function processWindow(
 
 			// Check if stop was requested after page load
 			if (shouldStop) {
-				log(
-					`⏹️ Stopping Profile ${cycleSpecificIndex} after navigation - automation stopped`,
-					windowIndex
-				);
+				log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
 				updateProfileStatus(windowIndex, 'failed');
 				failedWindows++; // Increment failed count
 				return;
@@ -258,19 +221,16 @@ async function processWindow(
 				cycle
 			});
 
-			log(
-				`⏱️ Wait timer started for Profile ${cycleSpecificIndex} (${waitTime}s allocated)`,
-				windowIndex
-			);
+			log(`⏱️ Wait timer started (${waitTime}s allocated)`, windowIndex);
 		} catch (navError) {
 			// Provide user-friendly error messages
 			let errorMessage = navError.message;
 			if (errorMessage.includes('Timeout') && errorMessage.includes('exceeded')) {
 				errorMessage = `❌ The site is not loaded under ${timeout} seconds so the profile is closed.`;
 			} else if (errorMessage.includes('net::ERR_')) {
-				errorMessage = `❌ Network error: Unable to connect to the website.`;
+				errorMessage = `❌ Network error: Unable to connect`;
 			} else if (errorMessage.includes('ERR_NAME_NOT_RESOLVED')) {
-				errorMessage = `❌ DNS error: Website address could not be resolved.`;
+				errorMessage = `❌ DNS error: Website address could not be resolved`;
 			} else {
 				errorMessage = `❌ Navigation failed: ${navError.message}`;
 			}
@@ -305,20 +265,14 @@ async function processWindow(
 		updateProfileStatus(windowIndex, 'success');
 		successWindows++; // Increment success count
 	} catch (err) {
-		log(
-			`❌ Error in Profile ${cycleSpecificIndex} (Cycle ${cycle}): ${err.message}`,
-			windowIndex
-		);
+		log(`❌ Error in Profile ${cycleSpecificIndex}: ${err.message}`, windowIndex);
 		updateProfileStatus(windowIndex, 'failed');
 		failedWindows++; // Increment failed count
 	} finally {
 		// Clean up resources
-		log(`🧹 Cleaning up resources for Profile ${cycleSpecificIndex}...`, windowIndex);
 		try {
 			if (page && !page.isClosed()) {
-				log(`📄 Closing page for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await page.close();
-				log(`✅ Page closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closePageErr) {
 			log(
@@ -329,39 +283,28 @@ async function processWindow(
 
 		try {
 			if (context) {
-				log(`🔧 Closing context for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await context.close();
-				log(`✅ Context closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closeContextErr) {
-			log(
-				`⚠️ Failed to close context for Profile ${cycleSpecificIndex}: ${closeContextErr.message}`,
-				windowIndex
-			);
+			log(`⚠️ Failed to close context: ${closeContextErr.message}`, windowIndex);
 		}
 
 		try {
 			if (browserInstance) {
-				log(`🌐 Closing browser for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await browserInstance.close();
 				// Remove from active browsers
 				const index = activeBrowsers.indexOf(browserInstance);
 				if (index > -1) {
 					activeBrowsers.splice(index, 1);
 				}
-				log(`✅ Browser closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closeBrowserErr) {
-			log(
-				`⚠️ Failed to close browser for Profile ${cycleSpecificIndex}: ${closeBrowserErr.message}`,
-				windowIndex
-			);
+			log(`⚠️ Failed to close browser: ${closeBrowserErr.message}`, windowIndex);
 		}
 
 		// Remove from active windows and update completion count
 		activeWindows.delete(windowIndex);
 		completedWindows++;
-		log(`🏁 Profile ${cycleSpecificIndex} cleanup completed`, windowIndex);
 	}
 }
 
@@ -409,7 +352,6 @@ async function runAutomation(config) {
 		clearProfileLogs();
 
 		log(`🔄 Starting Cycle ${cycle}/${totalCycles}`);
-		log(`📊 Cycle ${cycle} will process ${profilesPerCycle} profiles`);
 
 		// Create promises for all profiles in this cycle
 		const waitTimes = getRandomWaitTimes(profilesPerCycle, minWaitTime, maxWaitTime);
@@ -435,7 +377,6 @@ async function runAutomation(config) {
 		}
 
 		log(`✅ Cycle ${cycle} completed`);
-		log(`📈 Progress: ${completedWindows}/${totalWindows} total profiles completed`);
 
 		// Small delay between cycles (except for the last cycle)
 		if (cycle < totalCycles && !shouldStop) {

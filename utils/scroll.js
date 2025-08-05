@@ -90,13 +90,6 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 				}
 			}, action);
 
-			log(
-				`✅ Scroll action ${index + 1} completed - ${action.direction} by ${Math.round(
-					action.scrollSize
-				)}px`,
-				profileIndex
-			);
-
 			// 🔁 This makes the bot occasionally idle and simulate tab-switching, increasing realism
 			await simulateIdleBehavior(page, profileIndex);
 
@@ -112,7 +105,7 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 				await page.keyboard.down('Control');
 				await page.keyboard.press('KeyF');
 				await page.keyboard.up('Control');
-				log(`🔎 Simulated Ctrl+F (Find) action`, profileIndex);
+				log(`🔎 Simulated Ctrl+F`, profileIndex);
 			}
 
 			if (Math.random() < 0.3) {
@@ -123,12 +116,12 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 
 			if (Math.random() < 0.1) {
 				await page.keyboard.press('ArrowDown');
-				log(`⬇️ Simulated ArrowDown press`, profileIndex);
+				log(`⬇️ ArrowDown`, profileIndex);
 			}
 
 			if (Math.random() < 0.1) {
 				await page.keyboard.press('ArrowUp');
-				log(`⬆️ Simulated ArrowUp press`, profileIndex);
+				log(`⬆️ ArrowUp`, profileIndex);
 			}
 
 			if (Math.random() < 0.25) {
@@ -168,7 +161,7 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 			}
 
 			if (Math.random() < 0.2) {
-				log('🔗 Simulating fake link hover', profileIndex);
+				log('🔗 Simulating link hover', profileIndex);
 				await page.evaluate(() => {
 					const links = Array.from(document.querySelectorAll('a'));
 					if (links.length > 0) {
@@ -188,7 +181,7 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 			}
 
 			if (Math.random() < 0.15) {
-				log('📋 Simulating partial text copy', profileIndex);
+				log('📋 Simulating text copy', profileIndex);
 				await page.keyboard.down('Control');
 				await page.keyboard.press('KeyC');
 				await page.keyboard.up('Control');
@@ -215,7 +208,7 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 		await page.waitForTimeout(500 + Math.random() * 1000);
 	}
 
-	log(`🎉 Scroll simulation completed for Profile ${profileIndex}`, profileIndex);
+	log(`🎉 Scroll simulation completed`, profileIndex);
 }
 
 async function simulateAdInteraction(page, profileIndex) {
@@ -226,7 +219,7 @@ async function simulateAdInteraction(page, profileIndex) {
 		const adHandles = await page.$$('.ads');
 
 		if (adHandles.length) {
-			log(`🎯 Found ${adHandles.length} .ads elements. Visiting each...`, profileIndex);
+			log(`🎯 Found ${adHandles.length} .ads elements`, profileIndex);
 			for (const [i, handle] of adHandles.entries()) {
 				if (!page || page.isClosed()) break;
 				try {
@@ -253,7 +246,7 @@ async function simulateAdInteraction(page, profileIndex) {
 				}
 			}
 		} else {
-			log('❌ No .ads elements found on the page.', profileIndex);
+			log('❌ No .ads elements found', profileIndex);
 		}
 	} catch (error) {
 		log(`⚠️ Error while visiting .ads elements: ${error.message}`, profileIndex);

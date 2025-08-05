@@ -14,10 +14,8 @@ let currentCycleForLogging = 0;
 let profilesPerCycleForLogging = 0;
 
 function log(message, profileIndex = null) {
-	const time = new Date().toISOString();
-	const entry = `[${time}] ${message}`;
-	console.log(entry);
-	logs.push(entry);
+	console.log(message);
+	logs.push(message);
 
 	// If profileIndex is provided, also log to that specific profile
 	if (profileIndex !== null) {

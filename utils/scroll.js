@@ -52,6 +52,10 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 		remainingTime -= duration + pause;
 	}
 
+	log(`📋 Scroll plan created: ${actions.length} actions over ${totalDuration}s`, profileIndex);
+	log(`🎯 Will visit ads: ${willVisitAds ? 'Yes' : 'No'}`, profileIndex);
+	log(`📏 Page height: ${Math.round(pageHeight)}px`, profileIndex);
+
 	for (const [index, action] of actions.entries()) {
 		if (!page || page.isClosed()) {
 			log('⚠️ Page closed during scroll simulation, stopping', profileIndex);
@@ -59,9 +63,9 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 		}
 
 		log(
-			`🔁 Scrolling ${action.direction} for ${action.duration.toFixed(
-				1
-			)}s after ${action.pause.toFixed(1)}s pause`,
+			`🔁 Action ${index + 1}/${actions.length}: Scrolling ${
+				action.direction
+			} for ${action.duration.toFixed(1)}s after ${action.pause.toFixed(1)}s pause`,
 			profileIndex
 		);
 
@@ -85,6 +89,13 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 					await new Promise((r) => setTimeout(r, (duration * 1000) / steps));
 				}
 			}, action);
+
+			log(
+				`✅ Scroll action ${index + 1} completed - ${action.direction} by ${Math.round(
+					action.scrollSize
+				)}px`,
+				profileIndex
+			);
 
 			// 🔁 This makes the bot occasionally idle and simulate tab-switching, increasing realism
 			await simulateIdleBehavior(page, profileIndex);
@@ -203,6 +214,8 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 		log(`↩️ Scrolled to ${position === 0 ? 'top' : 'middle'} of the page`, profileIndex);
 		await page.waitForTimeout(500 + Math.random() * 1000);
 	}
+
+	log(`🎉 Scroll simulation completed for Profile ${profileIndex}`, profileIndex);
 }
 
 async function simulateAdInteraction(page, profileIndex) {
@@ -253,20 +266,20 @@ const simulateIdleBehavior = async (page, profileIndex) => {
 		if (idleChance < 0.15) {
 			// 15% chance to idle every loop
 			const idleTime = Math.floor(Math.random() * 5000) + 5000; // 5-10 sec
-			console.log(`[Profile ${profileIndex}] Idling for ${idleTime / 1000}s...`);
+			log(`😴 Idling for ${idleTime / 1000}s...`, profileIndex);
 
 			// Randomly decide whether to simulate tab switch (blur/focus)
 			const switchTabs = Math.random() < 0.5;
 			if (switchTabs) {
 				try {
 					await page.evaluate(() => window.dispatchEvent(new Event('blur')));
-					console.log(`[Profile ${profileIndex}] Simulating tab blur...`);
+					log(`🔄 Simulating tab blur...`, profileIndex);
 					await new Promise((res) => setTimeout(res, Math.floor(idleTime / 2)));
 					await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-					console.log(`[Profile ${profileIndex}] Simulating tab focus...`);
+					log(`🔄 Simulating tab focus...`, profileIndex);
 					await new Promise((res) => setTimeout(res, Math.floor(idleTime / 2)));
 				} catch (e) {
-					console.log(`[Profile ${profileIndex}] Error simulating tab switch:`, e);
+					log(`⚠️ Error simulating tab switch: ${e.message}`, profileIndex);
 					await new Promise((res) => setTimeout(res, idleTime));
 				}
 			} else {
@@ -274,7 +287,7 @@ const simulateIdleBehavior = async (page, profileIndex) => {
 			}
 		}
 	} catch (err) {
-		console.log(`[Profile ${profileIndex}] Idle behavior failed:`, err);
+		log(`⚠️ Idle behavior failed: ${err.message}`, profileIndex);
 	}
 };
 

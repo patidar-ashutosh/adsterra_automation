@@ -86,8 +86,13 @@ async function processWindow(
 			windowIndex
 		);
 
+		log(`🔧 Generating fingerprint for Profile ${cycleSpecificIndex}...`, windowIndex);
 		const fingerprint = await generateFingerprint(proxyURL, browserChoice.name, 'desktop');
 		const userAgent = fingerprint.userAgent;
+		log(
+			`📱 Fingerprint generated - Screen: ${fingerprint.screen.width}x${fingerprint.screen.height}, Timezone: ${fingerprint.timezone}`,
+			windowIndex
+		);
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
@@ -100,6 +105,10 @@ async function processWindow(
 			return;
 		}
 
+		log(
+			`🚀 Launching ${browserChoice.name} browser for Profile ${cycleSpecificIndex}...`,
+			windowIndex
+		);
 		browserInstance = await browserChoice.launcher.launch({ headless: false });
 
 		// Check if stop was requested after browser launch
@@ -132,6 +141,10 @@ async function processWindow(
 			return;
 		}
 
+		log(
+			`🔧 Creating browser context with fingerprint for Profile ${cycleSpecificIndex}...`,
+			windowIndex
+		);
 		context = await browserInstance.newContext({
 			userAgent,
 			viewport: fingerprint.screen,
@@ -153,6 +166,7 @@ async function processWindow(
 			return;
 		}
 
+		log(`📄 Creating new page for Profile ${cycleSpecificIndex}...`, windowIndex);
 		page = await context.newPage();
 
 		// Check if stop was requested after page creation
@@ -166,8 +180,10 @@ async function processWindow(
 			return;
 		}
 
+		log(`🔒 Injecting fingerprint scripts for Profile ${cycleSpecificIndex}...`, windowIndex);
 		// Inject fingerprint scripts
 		await injectFingerprint(page, fingerprint);
+		log(`✅ Fingerprint injection completed for Profile ${cycleSpecificIndex}`, windowIndex);
 
 		// Navigate to the page with proper error handling
 		try {
@@ -297,9 +313,12 @@ async function processWindow(
 		failedWindows++; // Increment failed count
 	} finally {
 		// Clean up resources
+		log(`🧹 Cleaning up resources for Profile ${cycleSpecificIndex}...`, windowIndex);
 		try {
 			if (page && !page.isClosed()) {
+				log(`📄 Closing page for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await page.close();
+				log(`✅ Page closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closePageErr) {
 			log(
@@ -310,7 +329,9 @@ async function processWindow(
 
 		try {
 			if (context) {
+				log(`🔧 Closing context for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await context.close();
+				log(`✅ Context closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closeContextErr) {
 			log(
@@ -321,12 +342,14 @@ async function processWindow(
 
 		try {
 			if (browserInstance) {
+				log(`🌐 Closing browser for Profile ${cycleSpecificIndex}...`, windowIndex);
 				await browserInstance.close();
 				// Remove from active browsers
 				const index = activeBrowsers.indexOf(browserInstance);
 				if (index > -1) {
 					activeBrowsers.splice(index, 1);
 				}
+				log(`✅ Browser closed for Profile ${cycleSpecificIndex}`, windowIndex);
 			}
 		} catch (closeBrowserErr) {
 			log(
@@ -338,6 +361,7 @@ async function processWindow(
 		// Remove from active windows and update completion count
 		activeWindows.delete(windowIndex);
 		completedWindows++;
+		log(`🏁 Profile ${cycleSpecificIndex} cleanup completed`, windowIndex);
 	}
 }
 

@@ -16,6 +16,49 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Store connected clients for SSE
+const connectedClients = new Set();
+
+// SSE endpoint for real-time logs
+app.get('/logs/stream', (req, res) => {
+	res.writeHead(200, {
+		'Content-Type': 'text/event-stream',
+		'Cache-Control': 'no-cache',
+		Connection: 'keep-alive',
+		'Access-Control-Allow-Origin': '*'
+	});
+
+	// Send initial connection message
+	res.write(
+		`data: ${JSON.stringify({ type: 'connection', message: 'Connected to log stream' })}\n\n`
+	);
+
+	// Add client to connected clients
+	connectedClients.add(res);
+
+	// Handle client disconnect
+	req.on('close', () => {
+		connectedClients.delete(res);
+	});
+});
+
+// Function to broadcast logs to all connected clients
+function broadcastLog(profileIndex, message) {
+	const logData = {
+		type: 'log',
+		profileIndex,
+		message,
+		timestamp: new Date().toISOString()
+	};
+
+	connectedClients.forEach((client) => {
+		client.write(`data: ${JSON.stringify(logData)}\n\n`);
+	});
+}
+
+// Make broadcastLog available globally
+global.broadcastLog = broadcastLog;
+
 // Routes
 // Automation start
 app.use('/open-url', openUrlRoute);

@@ -895,6 +895,47 @@
 			let currentProfilesCount = 0;
 			let logUpdateInterval = null;
 			let currentCycleProfiles = 0; // Track profiles for current cycle
+			let eventSource = null; // SSE connection
+
+			// Function to connect to SSE for real-time logs
+			function connectToLogStream() {
+				if (eventSource) {
+					eventSource.close();
+				}
+
+				eventSource = new EventSource('/logs/stream');
+
+				eventSource.onmessage = function (event) {
+					try {
+						const data = JSON.parse(event.data);
+
+						if (data.type === 'log' && data.profileIndex) {
+							// Immediately append log to the specific profile
+							appendProfileLog(data.profileIndex, data.message);
+						}
+					} catch (error) {
+						console.error('Error parsing SSE data:', error);
+					}
+				};
+
+				eventSource.onerror = function (error) {
+					console.error('SSE connection error:', error);
+					// Try to reconnect after 5 seconds
+					setTimeout(connectToLogStream, 5000);
+				};
+
+				eventSource.onopen = function () {
+					console.log('Connected to real-time log stream');
+				};
+			}
+
+			// Function to disconnect from SSE
+			function disconnectFromLogStream() {
+				if (eventSource) {
+					eventSource.close();
+					eventSource = null;
+				}
+			}
 
 			// Function to create profile log areas for current cycle
 			function createProfileLogsForCycle(profilesCount, cycle) {
@@ -1063,11 +1104,13 @@
 					startButton.style.display = 'none';
 					stopButton.style.display = 'block';
 					startLogUpdates();
+					connectToLogStream(); // Start SSE connection
 				} else {
 					document.body.classList.remove('automation-running');
 					startButton.style.display = 'block';
 					stopButton.style.display = 'none';
 					stopLogUpdates();
+					disconnectFromLogStream(); // Close SSE connection
 				}
 			}
 
@@ -1301,6 +1344,9 @@
 			});
 
 			checkStatus();
+
+			// Connect to log stream when page loads
+			connectToLogStream();
 		</script>
 	</body>
 </html>

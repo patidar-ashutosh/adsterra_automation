@@ -33,6 +33,11 @@ function log(message, profileIndex = null) {
 		// Store logs without timestamp for cleaner display
 		const cleanMessage = message;
 		profileLogs.get(cycleSpecificIndex).push(cleanMessage);
+
+		// Broadcast log to connected frontend clients for real-time display
+		if (global.broadcastLog) {
+			global.broadcastLog(cycleSpecificIndex, cleanMessage);
+		}
 	}
 }
 

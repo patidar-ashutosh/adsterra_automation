@@ -83,8 +83,8 @@ router.post('/', async (req, res) => {
 			});
 		}
 
-		// const combinedURL = ProxyURL + encodeURIComponent(blogURL);
-		const combinedURL = 'https://getmodsapk.com/';
+		const combinedURL = ProxyURL + encodeURIComponent(blogURL);
+		// const combinedURL = 'https://getmodsapk.com/';
 
 		// Send initial response
 		res.json({

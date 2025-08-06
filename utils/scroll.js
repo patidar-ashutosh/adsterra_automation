@@ -29,7 +29,12 @@ async function moveMouseSmooth(page, from, to, steps = 25) {
 }
 
 // Advanced human-like scroll simulation
-async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null) {
+async function simulateHumanScroll(
+	page,
+	totalDuration = 20,
+	profileIndex = null,
+	timeoutId = null
+) {
 	if (!page || page.isClosed()) {
 		log('⚠️ Page is closed, skipping scroll simulation', profileIndex);
 		return;
@@ -57,8 +62,21 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 	log(`📏 Page height: ${Math.round(pageHeight)}px`, profileIndex);
 
 	for (const [index, action] of actions.entries()) {
+		// Check if page is closed or timeout has been triggered
 		if (!page || page.isClosed()) {
 			log('⚠️ Page closed during scroll simulation, stopping', profileIndex);
+			break;
+		}
+
+		// If we have a timeout ID, check if the timeout has already fired by checking if page is still open
+		// This is an indirect way to detect if our timeout has been triggered
+		try {
+			await page.evaluate(() => window.location.href); // Simple check to see if page is still responsive
+		} catch (e) {
+			log(
+				'⚠️ Page became unresponsive, likely due to timeout - stopping scroll',
+				profileIndex
+			);
 			break;
 		}
 
@@ -71,6 +89,12 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 
 		try {
 			await page.waitForTimeout(action.pause * 1000);
+
+			// Check again before scrolling
+			if (!page || page.isClosed()) {
+				log('⚠️ Page closed during action pause, stopping', profileIndex);
+				break;
+			}
 
 			await page.evaluate(async ({ direction, scrollSize, duration }) => {
 				const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -90,8 +114,13 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 				}
 			}, action);
 
+			// Check before each additional action
+			if (!page || page.isClosed()) break;
+
 			// 🔁 This makes the bot occasionally idle and simulate tab-switching, increasing realism
 			await simulateIdleBehavior(page, profileIndex);
+
+			if (!page || page.isClosed()) break;
 
 			if (Math.random() < 0.4) {
 				const x = Math.floor(Math.random() * 800) + 100;
@@ -101,6 +130,8 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 				log(`🌀 Smoothly moved mouse to (${x}, ${y})`, profileIndex);
 			}
 
+			if (!page || page.isClosed()) break;
+
 			if (Math.random() < 0.2) {
 				await page.keyboard.down('Control');
 				await page.keyboard.press('KeyF');
@@ -108,21 +139,29 @@ async function simulateHumanScroll(page, totalDuration = 20, profileIndex = null
 				log(`🔎 Simulated Ctrl+F`, profileIndex);
 			}
 
+			if (!page || page.isClosed()) break;
+
 			if (Math.random() < 0.3) {
 				const pauseTime = 500 + Math.floor(Math.random() * 1500);
 				log(`😴 Extra pause for ${(pauseTime / 1000).toFixed(1)}s`, profileIndex);
 				await page.waitForTimeout(pauseTime);
 			}
 
+			if (!page || page.isClosed()) break;
+
 			if (Math.random() < 0.1) {
 				await page.keyboard.press('ArrowDown');
 				log(`⬇️ ArrowDown`, profileIndex);
 			}
 
+			if (!page || page.isClosed()) break;
+
 			if (Math.random() < 0.1) {
 				await page.keyboard.press('ArrowUp');
 				log(`⬆️ ArrowUp`, profileIndex);
 			}
+
+			if (!page || page.isClosed()) break;
 
 			if (Math.random() < 0.25) {
 				log('📝 Simulating text selection', profileIndex);

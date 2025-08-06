@@ -58,6 +58,7 @@ async function processWindow(
 	let browserInstance = null;
 	let context = null;
 	let page = null;
+	let isCompleted = false; // Flag to prevent double completion
 	const cycleSpecificIndex = getCycleSpecificIndex(windowIndex, cycle, profilesPerCycle);
 
 	try {
@@ -243,6 +244,51 @@ async function processWindow(
 
 		log(`🕒 Time allocated: ${waitTime}s`, windowIndex);
 
+		// Set up a strict timeout to close the profile when wait time expires
+		const strictTimeoutId = setTimeout(async () => {
+			if (page && !page.isClosed() && !isCompleted) {
+				isCompleted = true; // Mark as completed to prevent double processing
+				log(
+					`⏰ Wait time (${waitTime}s) expired - force closing Profile ${cycleSpecificIndex}`,
+					windowIndex
+				);
+				updateProfileStatus(windowIndex, 'success'); // Mark as success since it completed its allocated time
+				successWindows++; // Increment success count
+
+				try {
+					// Force close the page and browser
+					if (page && !page.isClosed()) {
+						await page.close();
+					}
+					if (context) {
+						await context.close();
+					}
+					if (browserInstance) {
+						await browserInstance.close();
+						// Remove from active browsers
+						const index = activeBrowsers.indexOf(browserInstance);
+						if (index > -1) {
+							activeBrowsers.splice(index, 1);
+						}
+					}
+
+					// Remove from active windows and update completion count
+					activeWindows.delete(windowIndex);
+					completedWindows++;
+
+					log(
+						`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed by timeout (${completedWindows}/${totalWindows})`,
+						windowIndex
+					);
+				} catch (timeoutCloseError) {
+					log(
+						`⚠️ Error during timeout cleanup: ${timeoutCloseError.message}`,
+						windowIndex
+					);
+				}
+			}
+		}, waitTime * 1000); // Convert seconds to milliseconds
+
 		let usableScrollTime = waitTime;
 		if (usableScrollTime > 10) {
 			log(`⏳ Waiting 5s before scroll...`, windowIndex);
@@ -251,24 +297,45 @@ async function processWindow(
 		}
 
 		// Only attempt scrolling if page is still available and not stopped
-		if (page && !page.isClosed() && !shouldStop) {
-			await simulateHumanScroll(page, usableScrollTime, windowIndex);
+		if (page && !page.isClosed() && !shouldStop && !isCompleted) {
+			// Pass the timeout control to scroll function
+			await simulateHumanScroll(page, usableScrollTime, windowIndex, strictTimeoutId);
 			await page.waitForTimeout(1000);
 		}
 
-		log(
-			`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed (${
-				completedWindows + 1
-			}/${totalWindows})`,
-			windowIndex
-		);
-		updateProfileStatus(windowIndex, 'success');
-		successWindows++; // Increment success count
+		// Clear the timeout if we complete before time expires
+		clearTimeout(strictTimeoutId);
+
+		// Only log completion if we haven't been closed by timeout and not already completed
+		if (page && !page.isClosed() && !isCompleted) {
+			isCompleted = true; // Mark as completed to prevent double processing
+			log(
+				`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed (${
+					completedWindows + 1
+				}/${totalWindows})`,
+				windowIndex
+			);
+			updateProfileStatus(windowIndex, 'success');
+			successWindows++; // Increment success count
+		}
 	} catch (err) {
-		log(`❌ Error in Profile ${cycleSpecificIndex}: ${err.message}`, windowIndex);
-		updateProfileStatus(windowIndex, 'failed');
-		failedWindows++; // Increment failed count
+		// Only mark as failed if not already completed by timeout
+		if (!isCompleted) {
+			log(`❌ Error in Profile ${cycleSpecificIndex}: ${err.message}`, windowIndex);
+			updateProfileStatus(windowIndex, 'failed');
+			failedWindows++; // Increment failed count
+		}
+
+		// Clear timeout on error
+		if (typeof strictTimeoutId !== 'undefined') {
+			clearTimeout(strictTimeoutId);
+		}
 	} finally {
+		// Clear timeout in finally block to ensure it's always cleared
+		if (typeof strictTimeoutId !== 'undefined') {
+			clearTimeout(strictTimeoutId);
+		}
+
 		// Clean up resources
 		try {
 			if (page && !page.isClosed()) {
@@ -302,9 +369,13 @@ async function processWindow(
 			log(`⚠️ Failed to close browser: ${closeBrowserErr.message}`, windowIndex);
 		}
 
-		// Remove from active windows and update completion count
+		// Remove from active windows
 		activeWindows.delete(windowIndex);
-		completedWindows++;
+
+		// Only increment completedWindows if not already completed by timeout
+		if (!isCompleted) {
+			completedWindows++;
+		}
 	}
 }
 

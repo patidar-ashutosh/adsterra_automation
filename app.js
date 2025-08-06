@@ -43,13 +43,33 @@ app.get('/logs/stream', (req, res) => {
 });
 
 // Function to broadcast logs to all connected clients
-function broadcastLog(profileIndex, message) {
-	const logData = {
-		type: 'log',
-		profileIndex,
-		message,
-		timestamp: new Date().toISOString()
-	};
+function broadcastLog(profileIndex, message, cycleChangeData = null) {
+	let logData;
+
+	if (cycleChangeData) {
+		// Handle cycle change event
+		if (cycleChangeData.type === 'cycle_change') {
+			logData = {
+				type: 'cycle_change',
+				cycle: cycleChangeData.cycle
+			};
+		} else if (cycleChangeData.type === 'status_change') {
+			// Handle status change event
+			logData = {
+				type: 'status_change',
+				profileIndex: cycleChangeData.profileIndex,
+				status: cycleChangeData.status
+			};
+		}
+	} else {
+		// Handle regular log event
+		logData = {
+			type: 'log',
+			profileIndex,
+			message,
+			timestamp: new Date().toISOString()
+		};
+	}
 
 	connectedClients.forEach((client) => {
 		client.write(`data: ${JSON.stringify(logData)}\n\n`);

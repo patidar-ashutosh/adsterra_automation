@@ -665,7 +665,7 @@
 						type="text"
 						name="blogURL"
 						id="blogURL"
-						value="https://phpzerotohero.blogspot.com/2022/07/indexed-array-in-php-in-hindi.html"
+						value="https://dirtypagesblog.blogspot.com/2025/08/midnight-with-stranger-ultimate-one.html"
 						required
 					/>
 
@@ -674,7 +674,7 @@
 						type="text"
 						name="ProxyURL"
 						id="ProxyURL"
-						value="http://api.scrape.do?token=de001754420e460597aa9e1984a01e5b5bf586fcb47&url="
+						value="http://api.scrape.do?token=6178e21ee1a84b90800c21bbd3ec590eff7c36fa576&url="
 						required
 					/>
 
@@ -912,6 +912,33 @@
 						if (data.type === 'log' && data.profileIndex) {
 							// Immediately append log to the specific profile
 							appendProfileLog(data.profileIndex, data.message);
+						} else if (data.type === 'cycle_change') {
+							// Handle cycle change - clear logs for new cycle
+							console.log(`🔄 Cycle change detected: Cycle ${data.cycle}`);
+							clearAllProfileLogs();
+							currentCycle = data.cycle || 1;
+
+							// Update cycle display
+							const cycleTextElement = document.getElementById('cycleText');
+							if (cycleTextElement) {
+								cycleTextElement.textContent = `Current Cycle: ${data.cycle}`;
+							}
+						} else if (data.type === 'status_change' && data.profileIndex) {
+							// Handle real-time status updates
+							console.log(
+								`📊 Status change: Profile ${data.profileIndex} -> ${data.status}`
+							);
+							let className = 'waiting';
+							if (data.status === 'running') {
+								className = 'running';
+							} else if (data.status === 'completed') {
+								className = 'completed';
+							} else if (data.status === 'success') {
+								className = 'success';
+							} else if (data.status === 'failed') {
+								className = 'error';
+							}
+							updateProfileStatus(data.profileIndex, data.status, className);
 						}
 					} catch (error) {
 						console.error('Error parsing SSE data:', error);
@@ -975,6 +1002,15 @@
 				}
 			}
 
+			// Function to clear all profile logs
+			function clearAllProfileLogs() {
+				profileLogs.forEach((logArea) => {
+					if (logArea) {
+						logArea.value = '';
+					}
+				});
+			}
+
 			// Function to update profile status
 			function updateProfileStatus(profileIndex, status, className) {
 				const statusElement = document.getElementById(`profileStatus${profileIndex}`);
@@ -1027,6 +1063,9 @@
 							logsData.profilesPerCycle &&
 							logsData.currentCycle !== currentCycle
 						) {
+							// Clear logs when starting a new cycle
+							clearAllProfileLogs();
+
 							currentCycle = logsData.currentCycle;
 							currentProfilesCount = logsData.profilesPerCycle;
 							currentCycleProfiles = logsData.profilesPerCycle;
@@ -1085,7 +1124,7 @@
 				if (logUpdateInterval) {
 					clearInterval(logUpdateInterval);
 				}
-				logUpdateInterval = setInterval(updateProfileLogs, 2000);
+				logUpdateInterval = setInterval(updateProfileLogs, 1000);
 			}
 
 			// Function to stop log updates
@@ -1308,7 +1347,8 @@
 						const result = await res.json();
 
 						if (result.success) {
-							// Log to all profile areas initially
+							// Clear any existing logs and add initial messages
+							clearAllProfileLogs();
 							for (let i = 1; i <= profilesCount; i++) {
 								appendProfileLog(i, `🚀 Starting Profile ${i}`);
 								appendProfileLog(i, `⏳ Waiting for automation to start...`);

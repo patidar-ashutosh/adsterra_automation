@@ -38,3 +38,8 @@ Unless the site uses **deep fingerprinting or session analytics**, your bot shou
 | Performance timings API                                       | ❌                                                                 | Can be tweaked using stealth tools                                                                                                                                      |
 
 ---
+
+boerienriguez.gmlp7.6.2.5@gmail.com | boerienriguez.gmlp7.6.2.5@gmail.com
+
+de001754420e460597aa9e1984a01e5b5bf586fcb47
+6178e21ee1a84b90800c21bbd3ec590eff7c36fa576

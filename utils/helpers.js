@@ -45,6 +45,15 @@ function updateGlobalCycleInfo(cycle, profiles) {
 	globalProfilesPerCycle = profiles;
 	currentCycleForLogging = cycle;
 	profilesPerCycleForLogging = profiles;
+
+	// Clear previous cycle logs when starting a new cycle
+	if (cycle > 1) {
+		clearProfileLogs();
+		// Broadcast cycle change to frontend
+		if (global.broadcastLog) {
+			global.broadcastLog(null, null, { type: 'cycle_change', cycle: cycle });
+		}
+	}
 }
 
 // Function to get global cycle info
@@ -63,6 +72,15 @@ function updateProfileStatus(profileIndex, status) {
 		cycleSpecificIndex = ((profileIndex - 1) % profilesPerCycleForLogging) + 1;
 	}
 	profileStatus.set(cycleSpecificIndex, status);
+
+	// Broadcast status change to frontend for real-time updates
+	if (global.broadcastLog) {
+		global.broadcastLog(null, null, {
+			type: 'status_change',
+			profileIndex: cycleSpecificIndex,
+			status: status
+		});
+	}
 }
 
 // Function to get profile status

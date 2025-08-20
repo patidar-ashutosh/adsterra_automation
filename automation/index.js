@@ -470,12 +470,12 @@ async function runAutomation(config) {
 	resetStopState();
 
 	log(
-		`🚀 Starting automation with ${totalUrls} URLs, ${profilesPerUrl} profiles per URL, ${totalCycles} cycles`
+		`🚀 Starting website automation with ${totalUrls} websites, ${profilesPerUrl} profiles per website, ${totalCycles} cycles`
 	);
-	log(`📊 Total profiles: ${profilesPerUrl * totalUrls}, Total windows: ${totalWindows}`);
+	log(`📊 Total profiles: ${profilesPerUrl * totalUrls}, Total sessions: ${totalWindows}`);
 
 	// Debug: Show URL construction
-	log(`🔗 URL Configuration:`);
+	log(`🔗 Website Configuration:`);
 	log(`📡 Proxy URL: ${proxyURL || 'None'}`);
 	targetUrls.forEach((url, index) => {
 		const originalUrl = originalTargetUrls[index];
@@ -488,7 +488,7 @@ async function runAutomation(config) {
 			}
 			finalUrl = cleanProxyURL + encodeURIComponent(url);
 		}
-		log(`  URL ${index + 1}: ${originalUrl} → ${finalUrl}`);
+		log(`  Website ${index + 1}: ${originalUrl} → ${finalUrl}`);
 	});
 
 	// Run automation cycles

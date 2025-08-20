@@ -30,7 +30,10 @@ app.get('/logs/stream', (req, res) => {
 
 	// Send initial connection message
 	res.write(
-		`data: ${JSON.stringify({ type: 'connection', message: 'Connected to log stream' })}\n\n`
+		`data: ${JSON.stringify({
+			type: 'connection',
+			message: 'Connected to automation log stream'
+		})}\n\n`
 	);
 
 	// Add client to connected clients
@@ -80,7 +83,7 @@ function broadcastLog(profileIndex, message, cycleChangeData = null) {
 global.broadcastLog = broadcastLog;
 
 // Routes
-// Automation start
+// Website automation start
 app.use('/open-url', openUrlRoute);
 // Logs endpoint
 app.use('/logs', logsRoute.router);
@@ -119,7 +122,7 @@ app.use((req, res) => {
 // Start server with error handling
 const server = app
 	.listen(PORT, () => {
-		console.log(`✅ Server running at http://localhost:${PORT}`);
+		console.log(`✅ Website Automation Server running at http://localhost:${PORT}`);
 	})
 	.on('error', (error) => {
 		console.error('❌ Server failed to start:', error);

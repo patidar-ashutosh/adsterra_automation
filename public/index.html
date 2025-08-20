@@ -156,7 +156,6 @@
 				font-family: 'Courier New', monospace;
 			}
 
-			#blogURL,
 			#ProxyURL {
 				color: #00ffd2;
 			}
@@ -514,11 +513,6 @@
 				align-items: center;
 			}
 
-			.blog-url-input {
-				flex: 1;
-				margin-top: 0;
-			}
-
 			.remove-url-btn {
 				background: linear-gradient(135deg, #f44336, #d32f2f);
 				color: #ffffff;
@@ -627,7 +621,7 @@
 			}
 
 			/* Enhanced URL input styling */
-			.blog-url-input:focus {
+			.website-url-input:focus {
 				border-color: #2196f3;
 				box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 			}
@@ -649,21 +643,21 @@
 			}
 
 			/* URL input validation styling */
-			.blog-url-input:invalid {
+			.website-url-input:invalid {
 				border-color: #f44336;
 				box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
 			}
 
-			.blog-url-input:valid {
+			.website-url-input:valid {
 				border-color: #4caf50;
 			}
 
-			.blog-url-input.valid-url {
+			.website-url-input.valid-url {
 				border-color: #4caf50;
 				box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
 			}
 
-			.blog-url-input.invalid-url {
+			.website-url-input.invalid-url {
 				border-color: #f44336;
 				box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
 			}
@@ -899,22 +893,22 @@
 	</head>
 	<body>
 		<div class="main-container">
-			<h2>🧠 Automation Control Panel</h2>
+			<h2>🌐 Website Automation Control Panel</h2>
 
 			<div class="form-container">
 				<form id="automationForm">
 					<!-- Multiple URLs Section -->
 					<div class="urls-section">
-						<label for="urls-container">Blog URLs:</label>
+						<label for="urls-container">Website URLs:</label>
 						<div id="urls-container">
 							<div class="url-input-group">
 								<div class="url-input-row">
 									<input
 										type="text"
-										class="blog-url-input"
-										name="blogURLs[]"
-										value="https://dirtypagesblog.blogspot.com/2025/08/midnight-with-stranger-ultimate-one.html"
-										placeholder="Enter blog URL"
+										class="website-url-input"
+										name="websiteURLs[]"
+										value="https://example.com"
+										placeholder="Enter website URL"
 										required
 									/>
 									<button
@@ -929,10 +923,10 @@
 							</div>
 						</div>
 						<button type="button" id="addUrlBtn" class="add-url-btn">
-							+ Add Another URL
+							+ Add Another Website
 						</button>
 						<small class="url-help"
-							>Add multiple URLs to automate multiple blogs simultaneously. Each URL
+							>Add multiple websites to automate them simultaneously. Each website
 							will get its own set of profiles.</small
 						>
 					</div>
@@ -954,7 +948,7 @@
 						<option value="webkit">Webkit</option>
 					</select>
 
-					<label for="openCount">Time of Run Automation:</label>
+					<label for="openCount">Number of Automation Cycles:</label>
 					<input
 						type="number"
 						name="openCount"
@@ -965,7 +959,7 @@
 						required
 					/>
 
-					<label for="profilesAtOnce">Profiles per URL:</label>
+					<label for="profilesAtOnce">Profiles per Website:</label>
 					<input
 						type="number"
 						name="profilesAtOnce"
@@ -976,7 +970,7 @@
 						required
 					/>
 					<small class="profile-help"
-						>This is the number of profiles that will run for EACH URL
+						>This is the number of profiles that will run for EACH website
 						simultaneously.</small
 					>
 
@@ -1001,7 +995,7 @@
 						ones.</small
 					>
 
-					<label for="minWaitTime">Minimum Wait Time (seconds):</label>
+					<label for="minWaitTime">Minimum Session Duration (seconds):</label>
 					<input
 						type="number"
 						name="minWaitTime"
@@ -1022,7 +1016,7 @@
 						the website.</small
 					>
 
-					<label for="maxWaitTime">Maximum Wait Time (seconds):</label>
+					<label for="maxWaitTime">Maximum Session Duration (seconds):</label>
 					<input
 						type="number"
 						name="maxWaitTime"
@@ -1040,8 +1034,8 @@
 							font-size: 15px;
 							font-weight: bold;
 						"
-						>This will be enabled after you set the minimum wait time. Must be at least
-						10 seconds more than minimum.</small
+						>This will be enabled after you set the minimum session duration. Must be at
+						least 10 seconds more than minimum.</small
 					>
 
 					<!-- Total Profiles Summary -->
@@ -1053,7 +1047,7 @@
 								<span class="summary-value" id="totalUrls">1</span>
 							</div>
 							<div class="summary-item">
-								<span class="summary-label">Profiles per URL:</span>
+								<span class="summary-label">Profiles per Website:</span>
 								<span class="summary-value" id="profilesPerUrl">2</span>
 							</div>
 							<div class="summary-item">
@@ -1280,7 +1274,7 @@
 
 			// Function to update profile URL distribution
 			function updateProfileUrlDistribution(profilesCount) {
-				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urlInputs = document.querySelectorAll('.website-url-input');
 				const urls = Array.from(urlInputs)
 					.map((input) => input.value.trim())
 					.filter((url) => url);
@@ -1527,7 +1521,7 @@
 
 			// Function to validate all URLs before submission
 			function validateAllURLs() {
-				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urlInputs = document.querySelectorAll('.website-url-input');
 				const invalidUrls = [];
 
 				urlInputs.forEach((input, index) => {
@@ -1569,9 +1563,9 @@
 					<div class="url-input-row">
 						<input
 							type="text"
-							class="blog-url-input"
-							name="blogURLs[]"
-							placeholder="Enter blog URL ${newIndex}"
+							class="website-url-input"
+							name="websiteURLs[]"
+							placeholder="Enter website URL ${newIndex}"
 							required
 						/>
 						<button type="button" class="remove-url-btn" onclick="removeUrl(this)">×</button>
@@ -1590,7 +1584,7 @@
 				}
 
 				// Focus on the new input
-				const newInput = newUrlGroup.querySelector('.blog-url-input');
+				const newInput = newUrlGroup.querySelector('.website-url-input');
 				newInput.focus();
 
 				// Add validation event listener
@@ -1631,9 +1625,9 @@
 
 			// Function to update all URL placeholder numbers
 			function updateUrlPlaceholders() {
-				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urlInputs = document.querySelectorAll('.website-url-input');
 				urlInputs.forEach((input, index) => {
-					input.placeholder = `Enter blog URL ${index + 1}`;
+					input.placeholder = `Enter website URL ${index + 1}`;
 				});
 			}
 
@@ -1648,7 +1642,7 @@
 			}
 
 			function updateTotalProfilesSummary() {
-				const urlCount = document.querySelectorAll('.blog-url-input').length;
+				const urlCount = document.querySelectorAll('.website-url-input').length;
 				const profilesPerUrl =
 					parseInt(document.getElementById('profilesAtOnce').value) || 0;
 				const cycles = parseInt(document.getElementById('openCount').value) || 0;
@@ -1691,7 +1685,7 @@
 					const maxWaitHelp = maxWaitInput.nextElementSibling;
 					if (maxWaitHelp) {
 						maxWaitHelp.textContent =
-							'This will be enabled after you set the minimum wait time. Must be at least 10 seconds more than minimum.';
+							'This will be enabled after you set the minimum session duration. Must be at least 10 seconds more than minimum.';
 					}
 				}
 			}
@@ -1704,19 +1698,19 @@
 				const maxWaitValue = parseInt(maxWaitInput.value) || 0;
 
 				if (minWaitValue < 30) {
-					alert('Minimum wait time must be at least 30 seconds');
+					alert('Minimum session duration must be at least 30 seconds');
 					return false;
 				}
 
 				if (maxWaitValue > 0 && maxWaitValue <= minWaitValue) {
 					alert(
-						'Maximum wait time must be at least 10 seconds more than minimum wait time'
+						'Maximum session duration must be at least 10 seconds more than minimum session duration'
 					);
 					return false;
 				}
 
 				if (maxWaitValue > 230) {
-					alert('Maximum wait time cannot exceed 230 seconds');
+					alert('Maximum session duration cannot exceed 230 seconds');
 					return false;
 				}
 
@@ -1728,7 +1722,7 @@
 
 			// Add validation to existing URL input
 			document.addEventListener('DOMContentLoaded', function () {
-				const existingUrlInput = document.querySelector('.blog-url-input');
+				const existingUrlInput = document.querySelector('.website-url-input');
 				if (existingUrlInput) {
 					existingUrlInput.addEventListener('input', function () {
 						if (this.value.trim()) {
@@ -1748,7 +1742,7 @@
 
 			// Update combined URLs when any URL input changes
 			document.addEventListener('input', function (e) {
-				if (e.target.classList.contains('blog-url-input')) {
+				if (e.target.classList.contains('website-url-input')) {
 					updateTotalProfilesSummary();
 
 					// Update profile URL distribution if profiles are already created
@@ -1778,7 +1772,7 @@
 
 					if (maxWaitValue > 0 && maxWaitValue <= minWaitValue) {
 						alert(
-							'Maximum wait time must be at least 10 seconds more than minimum wait time'
+							'Maximum session duration must be at least 10 seconds more than minimum session duration'
 						);
 						e.target.value = minWaitValue + 10;
 					}
@@ -1943,14 +1937,14 @@
 				const payload = Object.fromEntries(formData.entries());
 
 				// Collect all URLs
-				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urlInputs = document.querySelectorAll('.website-url-input');
 				const urls = Array.from(urlInputs)
 					.map((input) => input.value.trim())
 					.filter((url) => url);
 
 				// Validate that we have at least one URL
 				if (urls.length === 0) {
-					alert('Please enter at least one blog URL');
+					alert('Please enter at least one website URL');
 					return;
 				}
 
@@ -1958,11 +1952,11 @@
 				const startContent = `
 					<p style="margin-bottom: 20px; color: #ff9800; font-weight: 600;">Please review your automation settings:</p>
 					<div class="data-item">
-						<span class="data-label">Total URLs:</span>
+						<span class="data-label">Total Websites:</span>
 						<span class="data-value">${urls.length}</span>
 					</div>
 					<div class="data-item">
-						<span class="data-label">Blog URLs:</span>
+						<span class="data-label">Website URLs:</span>
 						<span class="data-value" style="max-width: 300px; word-break: break-all;">
 							${urls.map((url, index) => `${index + 1}. ${url}`).join('<br>')}
 						</span>
@@ -1976,26 +1970,26 @@
 						<span class="data-value">${payload.openCount}</span>
 					</div>
 					<div class="data-item">
-						<span class="data-label">Profiles per URL:</span>
+						<span class="data-label">Profiles per Website:</span>
 						<span class="data-value">${payload.profilesAtOnce}</span>
 					</div>
 					<div class="data-item">
-						<span class="data-label">Timeout:</span>
+						<span class="data-label">Loading Timeout:</span>
 						<span class="data-value">${payload.timeout}s</span>
 					</div>
 					<div class="data-item">
-						<span class="data-label">Wait Time:</span>
+						<span class="data-label">Session Duration:</span>
 						<span class="data-value">${payload.minWaitTime}-${payload.maxWaitTime}s</span>
 					</div>
 					<p style="margin-top: 20px; color: #4caf50; font-weight: 600;">Total Profiles: ${
 						urls.length * payload.profilesAtOnce
 					}</p>
-					<p style="margin-top: 10px; color: #2196f3; font-weight: 600;">Total Windows: ${
+					<p style="margin-top: 10px; color: #2196f3; font-weight: 600;">Total Sessions: ${
 						urls.length * payload.profilesAtOnce * payload.openCount
 					}</p>
 				`;
 
-				showPopup('🚀 Start Automation', startContent, 'Start Automation');
+				showPopup('🚀 Start Website Automation', startContent, 'Start Automation');
 
 				// Handle confirmation
 				popupConfirm.onclick = async () => {
@@ -2013,7 +2007,7 @@
 						// Prepare payload with URLs array
 						const automationPayload = {
 							...payload,
-							blogURLs: urls
+							websiteURLs: urls
 						};
 
 						const res = await fetch('/open-url', {

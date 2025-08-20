@@ -1,7 +1,7 @@
 {
-	"name": "automation-app",
+	"name": "website-automation",
 	"version": "1.0.0",
-	"description": "Human-like web automation with Playwright",
+	"description": "Universal website automation with Playwright - Multi-URL support, human-like behavior simulation, and advanced anti-detection",
 	"main": "app.js",
 	"scripts": {
 		"start": "node app.js"

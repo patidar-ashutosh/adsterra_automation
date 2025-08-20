@@ -6,8 +6,7 @@ const { runAutomation } = require('../automation');
 router.post('/', async (req, res) => {
 	try {
 		const {
-			blogURLs,
-			blogURL, // Keep for backward compatibility
+			websiteURLs,
 			ProxyURL,
 			browser,
 			openCount,
@@ -17,26 +16,24 @@ router.post('/', async (req, res) => {
 			maxWaitTime
 		} = req.body;
 
-		// Handle both single URL (backward compatibility) and multiple URLs
+		// Handle website URLs
 		let urls = [];
-		if (blogURLs && Array.isArray(blogURLs)) {
-			urls = blogURLs;
-		} else if (blogURL) {
-			urls = [blogURL];
+		if (websiteURLs && Array.isArray(websiteURLs)) {
+			urls = websiteURLs;
 		}
 
 		// Input validation
 		if (!urls || urls.length === 0) {
 			return res.status(400).json({
 				success: false,
-				error: 'Missing blog URLs'
+				error: 'Missing website URLs'
 			});
 		}
 
 		if (!ProxyURL) {
 			return res.status(400).json({
 				success: false,
-				error: 'Missing ProxyURL'
+				error: 'Missing Proxy URL'
 			});
 		}
 
@@ -62,7 +59,7 @@ router.post('/', async (req, res) => {
 			} catch (urlError) {
 				return res.status(400).json({
 					success: false,
-					error: `Invalid URL format at position ${i + 1}: ${urls[i]}`
+					error: `Invalid website URL format at position ${i + 1}: ${urls[i]}`
 				});
 			}
 		}
@@ -116,20 +113,19 @@ router.post('/', async (req, res) => {
 			});
 		}
 
-		// Calculate total profiles and windows
+		// Calculate total profiles and sessions
 		const totalProfiles = cleanedUrls.length * profiles;
-		const totalWindows = totalProfiles * cycles;
+		const totalSessions = totalProfiles * cycles;
 
-		// Check if total windows exceed reasonable limits
-		if (totalWindows > 200) {
+		// Check if total sessions exceed reasonable limits
+		if (totalSessions > 200) {
 			return res.status(400).json({
 				success: false,
-				error: `Total windows (${totalWindows}) exceeds maximum limit of 200. Please reduce URLs, profiles, or cycles.`
+				error: `Total sessions (${totalSessions}) exceeds maximum limit of 200. Please reduce websites, profiles, or cycles.`
 			});
 		}
 
-		// Prepare combined URLs for each blog
-		// const combinedURLs = urls.map((url) => encodeURIComponent(url));
+		// Prepare URLs for automation
 		const combinedURLs = cleanedUrls; // Send clean URLs, let automation handle proxy combination
 
 		// Send initial response
@@ -145,7 +141,7 @@ router.post('/', async (req, res) => {
 			timeout: pageTimeout,
 			minWait,
 			maxWait,
-			totalWindows
+			totalSessions
 		});
 
 		// Run automation in background with multiple URLs

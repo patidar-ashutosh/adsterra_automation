@@ -1,165 +1,218 @@
-# 🚀 Adsterra Automation - Multiple URL Support
+# 🌐 Website Automation Package
 
-## ✨ New Features
+A powerful, universal website automation package built with Node.js and Playwright. This package provides advanced web automation capabilities with human-like behavior simulation, multi-website support, and sophisticated anti-detection features.
 
-### 🔗 Multiple URL Management
+## ✨ Features
 
--   **Add unlimited URLs**: Add as many blog URLs as you want to automate
--   **Dynamic URL management**: Add/remove URLs on the fly with intuitive buttons
--   **URL validation**: Real-time validation with visual feedback
--   **Smart distribution**: Profiles are automatically distributed across all URLs
+-   **🌐 Multi-Website Support**: Automate multiple websites simultaneously
+-   **🤖 Human-Like Behavior**: Advanced simulation of real user interactions
+-   **🛡️ Anti-Detection**: Browser fingerprinting, proxy support, and stealth techniques
+-   **📊 Real-Time Monitoring**: Live progress tracking and detailed logging
+-   **⚡ High Performance**: Efficient profile management and cycle handling
+-   **🔧 Flexible Configuration**: Customizable timeouts, session durations, and browser selection
 
-### 📊 Enhanced Profile Management
+## 🚀 Quick Start
 
--   **Profiles per URL**: Configure how many profiles run for each URL simultaneously
--   **Total profiles calculation**: Automatic calculation of total profiles and windows
--   **URL-aware logging**: Each profile shows which URL it's working on
--   **Real-time status**: Live updates showing URL distribution and progress
+### Prerequisites
 
-### 🎨 Improved User Interface
+-   Node.js 16+
+-   npm or yarn
 
--   **Modern design**: Beautiful glassmorphism interface with smooth animations
--   **Responsive layout**: Works perfectly on desktop and mobile devices
--   **Visual feedback**: Color-coded URL validation and status indicators
--   **Smart summaries**: Real-time calculation of total automation scope
+### Installation
 
-## 🚀 How to Use Multiple URLs
+```bash
+git clone <repository-url>
+cd website-automation-package
+npm install
+npm start
+```
 
-### 1. Adding URLs
+### Usage
 
--   Click the **"+ Add Another URL"** button to add new URL inputs
--   Each URL input has real-time validation
--   Invalid URLs show red borders, valid URLs show green borders
+1. Open your browser to `http://localhost:3000`
+2. Configure your automation settings:
+    - Add website URLs to automate
+    - Set proxy configuration (optional)
+    - Configure browser settings
+    - Set automation cycles and profiles
+3. Click "Start Automation" to begin
 
-### 2. URL Configuration
+## 📋 Configuration Options
 
--   **Profiles per URL**: Set how many profiles run for each URL simultaneously
--   **Cycles**: Set how many times the entire automation runs
--   **Total calculation**: Automatically calculates total profiles and windows
+### Website URLs
 
-### 3. Example Scenarios
+-   **Multiple URLs**: Add multiple websites to automate simultaneously
+-   **Dynamic Management**: Add/remove websites with real-time validation
+-   **Smart Distribution**: Each website gets its own set of profiles
 
-#### Scenario 1: 3 URLs, 2 Profiles Each, 3 Cycles
+### Automation Settings
 
--   **Total URLs**: 3
--   **Profiles per URL**: 2
--   **Total Profiles**: 6
--   **Total Windows**: 18 (6 profiles × 3 cycles)
+-   **Cycles**: Number of times to run the complete automation
+-   **Profiles per Website**: Number of concurrent profiles per website
+-   **Loading Timeout**: Maximum time to wait for website loading (30-120s)
+-   **Session Duration**: Min/max time profiles stay on websites (30-230s)
 
-#### Scenario 2: 5 URLs, 1 Profile Each, 2 Cycles
+### Browser Configuration
 
--   **Total URLs**: 5
--   **Profiles per URL**: 1
--   **Total Profiles**: 5
--   **Total Windows**: 10 (5 profiles × 2 cycles)
+-   **Random Selection**: Automatically choose between Chromium, Firefox, Webkit
+-   **Manual Selection**: Choose specific browser for consistency
+-   **Fingerprinting**: Advanced browser spoofing and anti-detection
 
-### 4. Profile Distribution
+### Proxy Support
 
-Profiles are distributed across URLs in a round-robin fashion:
+-   **Flexible Format**: Supports various proxy service formats
+-   **Automatic Validation**: Real-time proxy URL validation
+-   **Smart Combination**: Automatic URL encoding and proxy integration
 
--   Profile 1 → URL 1
--   Profile 2 → URL 2
--   Profile 3 → URL 3
--   Profile 4 → URL 1 (if more than 3 profiles)
--   And so on...
+## 🔧 Technical Architecture
 
-## 🔧 Technical Implementation
+### Frontend
 
-### Backend Changes
+-   **Vanilla JavaScript**: No framework dependencies
+-   **Real-Time Updates**: Server-Sent Events (SSE) for live monitoring
+-   **Responsive Design**: Modern UI with mobile-friendly layout
+-   **Smart Validation**: Client-side validation with visual feedback
 
--   **Multiple URL support**: Backend now accepts arrays of URLs
--   **Profile distribution**: Each profile is assigned to a specific URL
--   **Enhanced logging**: Logs now include URL index and profile number
--   **Backward compatibility**: Still supports single URL mode
+### Backend
 
-### Frontend Changes
+-   **Express.js Server**: Fast, lightweight Node.js framework
+-   **Playwright Integration**: Cross-browser automation engine
+-   **Profile Management**: Efficient handling of multiple automation profiles
+-   **Error Handling**: Robust error handling and graceful degradation
 
--   **Dynamic URL inputs**: Add/remove URL fields dynamically
--   **Real-time validation**: URL format validation with visual feedback
--   **Smart summaries**: Automatic calculation of automation scope
--   **Enhanced monitoring**: Better profile tracking with URL information
+### Automation Engine
 
-## 📱 User Interface Features
+-   **Human Simulation**: Bezier curve mouse movements, natural scrolling
+-   **Anti-Detection**: Canvas, WebGL, AudioContext, Navigator spoofing
+-   **Session Management**: Intelligent profile lifecycle management
+-   **Resource Optimization**: Efficient browser instance handling
 
-### URL Management
+## 📊 Multi-Website Workflow
 
--   **Add URL button**: Blue button to add new URL inputs
--   **Remove URL button**: Red × button to remove URLs (hidden for single URL)
--   **URL validation**: Real-time validation with color-coded feedback
--   **Combined preview**: Shows all combined URLs with proxy
+### Profile Distribution
 
-### Profile Monitoring
+```
+Website 1 → Profiles 1, 2, 3...
+Website 2 → Profiles 4, 5, 6...
+Website 3 → Profiles 7, 8, 9...
+```
 
--   **URL info display**: Each profile shows which URL it's working on
--   **Status indicators**: Color-coded status for each profile
--   **Real-time logs**: Live updates from each profile
--   **Progress tracking**: Visual progress bars and status summaries
+### Cycle Management
 
-### Responsive Design
+-   **Parallel Execution**: All profiles run simultaneously within cycles
+-   **Cycle Isolation**: Fresh start for each automation cycle
+-   **Progress Tracking**: Real-time monitoring across all websites
 
--   **Mobile-friendly**: Optimized for all screen sizes
--   **Touch-friendly**: Easy to use on mobile devices
--   **Adaptive layout**: Automatically adjusts to screen dimensions
+## 🛡️ Anti-Detection Features
+
+### Browser Fingerprinting
+
+-   **Screen Properties**: Dynamic resolution and color depth
+-   **WebGL Spoofing**: Random WebGL vendor and renderer
+-   **Canvas Fingerprinting**: Unique canvas signatures
+-   **Audio Context**: Randomized audio fingerprinting
+
+### Human Behavior
+
+-   **Mouse Movements**: Natural Bezier curve trajectories
+-   **Scrolling Patterns**: Realistic scroll behavior simulation
+-   **Timing Variations**: Random delays and human-like pauses
+-   **Interaction Patterns**: Natural text selection and navigation
+
+## 📈 Performance & Limits
+
+### Resource Management
+
+-   **Maximum Sessions**: 200 concurrent sessions limit
+-   **Browser Instances**: Efficient Playwright browser management
+-   **Memory Optimization**: Automatic cleanup and resource management
+
+### Scalability
+
+-   **Multi-Website**: Support for unlimited websites
+-   **Profile Scaling**: Up to 10 profiles per website
+-   **Cycle Flexibility**: 1-20 automation cycles
+
+## 🔍 Use Cases
+
+### E-commerce
+
+-   **Product Monitoring**: Track prices across multiple stores
+-   **Inventory Checking**: Monitor stock availability
+-   **Competitive Analysis**: Analyze competitor pricing strategies
+
+### Content Management
+
+-   **Multi-Platform Publishing**: Post content to multiple websites
+-   **Content Monitoring**: Track content changes across sites
+-   **SEO Analysis**: Monitor search engine rankings
+
+### Testing & QA
+
+-   **Cross-Browser Testing**: Test websites across different browsers
+-   **Performance Monitoring**: Track website loading times
+-   **User Experience Testing**: Simulate real user interactions
+
+### Research & Data Collection
+
+-   **Market Research**: Gather data from multiple sources
+-   **Price Comparison**: Monitor pricing across platforms
+-   **Content Aggregation**: Collect information from various websites
 
 ## 🚨 Important Notes
 
-### Limits and Validation
-
--   **Maximum windows**: Limited to 200 total windows for performance
--   **URL validation**: All URLs must be properly formatted
--   **Required fields**: At least one URL is required to start automation
-
 ### Performance Considerations
 
--   **Browser instances**: Each profile opens a separate browser instance
--   **Memory usage**: Multiple profiles increase memory consumption
--   **Network load**: Multiple URLs increase network traffic
+-   **Resource Usage**: Each profile consumes system resources
+-   **Network Load**: Multiple concurrent connections to target websites
+-   **Browser Memory**: Playwright instances require significant RAM
 
-## 🔄 Migration from Single URL
+### Best Practices
 
-The system maintains full backward compatibility:
+-   **Start Small**: Begin with fewer profiles and increase gradually
+-   **Monitor Resources**: Watch system performance during automation
+-   **Respect Limits**: Stay within recommended session limits
+-   **Use Proxies**: Implement proxy rotation for large-scale automation
 
--   **Single URL mode**: Still works exactly as before
--   **Multiple URL mode**: New functionality for advanced users
--   **Automatic detection**: System automatically detects single vs. multiple URLs
+### Legal & Ethical
 
-## 🎯 Use Cases
+-   **Terms of Service**: Always respect website terms of service
+-   **Rate Limiting**: Implement appropriate delays between requests
+-   **Data Privacy**: Handle collected data responsibly
+-   **Respectful Automation**: Avoid overwhelming target websites
 
-### Content Creators
+## 🔮 Future Enhancements
 
--   Automate multiple blogs simultaneously
--   Distribute traffic across different content
--   Manage multiple projects efficiently
+### Planned Features
 
-### Marketing Agencies
+-   **Proxy Rotation**: Automatic proxy switching and management
+-   **Advanced Scheduling**: Time-based automation scheduling
+-   **Data Export**: CSV/JSON export of automation results
+-   **API Integration**: RESTful API for external control
+-   **Plugin System**: Extensible automation capabilities
 
--   Run campaigns across multiple websites
--   A/B test different landing pages
--   Scale automation across client portfolios
+### Community Contributions
 
-### SEO Professionals
+-   **Custom Behaviors**: User-defined interaction patterns
+-   **Template Library**: Pre-built automation templates
+-   **Integration Examples**: Sample integrations with popular tools
 
--   Monitor multiple domains
--   Test different content strategies
--   Analyze traffic patterns across sites
+## 📝 License
 
-## 🚀 Future Enhancements
+This project is licensed under the MIT License - see the LICENSE file for details.
 
--   **URL groups**: Group URLs by category or purpose
--   **Scheduling**: Set different automation schedules per URL
--   **Priority levels**: Assign priority to different URLs
--   **Advanced analytics**: Detailed reporting per URL
--   **Template management**: Save and reuse URL configurations
+## 🤝 Contributing
 
----
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📞 Support
 
-For questions or issues with the multiple URL functionality, please check:
+For support and questions:
 
-1. URL format validation
-2. Profile and cycle limits
-3. Browser compatibility
-4. System resources
+-   Create an issue on GitHub
+-   Check the documentation
+-   Review existing issues for solutions
 
-The multiple URL feature is designed to be intuitive and powerful while maintaining the reliability of the original single URL system.
+---
+
+**Built with ❤️ for the automation community**

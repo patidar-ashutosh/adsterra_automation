@@ -7,7 +7,6 @@ router.post('/', async (req, res) => {
 	try {
 		const {
 			websiteURLs,
-			ProxyURL,
 			browser,
 			openCount,
 			profilesAtOnce,
@@ -28,20 +27,6 @@ router.post('/', async (req, res) => {
 				success: false,
 				error: 'Missing website URLs'
 			});
-		}
-
-		if (!ProxyURL) {
-			return res.status(400).json({
-				success: false,
-				error: 'Missing Proxy URL'
-			});
-		}
-
-		// Validate and clean proxy URL
-		let cleanProxyURL = ProxyURL.trim();
-		if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
-			// Add separator if not present
-			cleanProxyURL = cleanProxyURL + '=';
 		}
 
 		// Validate each URL format and clean them
@@ -125,15 +110,11 @@ router.post('/', async (req, res) => {
 			});
 		}
 
-		// Prepare URLs for automation
-		const combinedURLs = cleanedUrls; // Send clean URLs, let automation handle proxy combination
-
 		// Send initial response
 		res.json({
 			success: true,
 			started: true,
 			urls: cleanedUrls,
-			combinedURLs: combinedURLs,
 			totalUrls: cleanedUrls.length,
 			profilesPerUrl: profiles,
 			totalProfiles: totalProfiles,
@@ -146,9 +127,8 @@ router.post('/', async (req, res) => {
 
 		// Run automation in background with multiple URLs
 		runAutomation({
-			urls: combinedURLs,
+			urls: cleanedUrls,
 			originalUrls: cleanedUrls,
-			proxyURL: cleanProxyURL, // Use the cleaned proxy URL
 			browser,
 			openCount: cycles,
 			profilesAtOnce: profiles,

@@ -6,7 +6,7 @@ A powerful, universal website automation package built with Node.js and Playwrig
 
 -   **🌐 Multi-Website Support**: Automate multiple websites simultaneously
 -   **🤖 Human-Like Behavior**: Advanced simulation of real user interactions
--   **🛡️ Anti-Detection**: Browser fingerprinting, proxy support, and stealth techniques
+-   **🛡️ Anti-Detection**: Browser fingerprinting and stealth techniques
 -   **📊 Real-Time Monitoring**: Live progress tracking and detailed logging
 -   **⚡ High Performance**: Efficient profile management and cycle handling
 -   **🔧 Flexible Configuration**: Customizable timeouts, session durations, and browser selection
@@ -32,7 +32,6 @@ npm start
 1. Open your browser to `http://localhost:3000`
 2. Configure your automation settings:
     - Add website URLs to automate
-    - Set proxy configuration (optional)
     - Configure browser settings
     - Set automation cycles and profiles
 3. Click "Start Automation" to begin
@@ -57,12 +56,6 @@ npm start
 -   **Random Selection**: Automatically choose between Chromium, Firefox, Webkit
 -   **Manual Selection**: Choose specific browser for consistency
 -   **Fingerprinting**: Advanced browser spoofing and anti-detection
-
-### Proxy Support
-
--   **Flexible Format**: Supports various proxy service formats
--   **Automatic Validation**: Real-time proxy URL validation
--   **Smart Combination**: Automatic URL encoding and proxy integration
 
 ## 🔧 Technical Architecture
 
@@ -172,7 +165,7 @@ Website 3 → Profiles 7, 8, 9...
 -   **Start Small**: Begin with fewer profiles and increase gradually
 -   **Monitor Resources**: Watch system performance during automation
 -   **Respect Limits**: Stay within recommended session limits
--   **Use Proxies**: Implement proxy rotation for large-scale automation
+-   **Direct Connection**: Run automation directly from your IP address
 
 ### Legal & Ethical
 
@@ -185,7 +178,6 @@ Website 3 → Profiles 7, 8, 9...
 
 ### Planned Features
 
--   **Proxy Rotation**: Automatic proxy switching and management
 -   **Advanced Scheduling**: Time-based automation scheduling
 -   **Data Export**: CSV/JSON export of automation results
 -   **API Integration**: RESTful API for external control

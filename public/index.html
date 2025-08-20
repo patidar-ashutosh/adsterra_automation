@@ -149,17 +149,6 @@
 				border: 1px solid rgba(76, 175, 80, 0.3);
 			}
 
-			#combinedURL {
-				background: rgba(0, 0, 0, 0.3);
-				color: #ff9800;
-				border: 1px solid rgba(255, 152, 0, 0.3);
-				font-family: 'Courier New', monospace;
-			}
-
-			#ProxyURL {
-				color: #00ffd2;
-			}
-
 			/* Profile logs styles */
 			.profile-logs-container {
 				display: none;
@@ -931,15 +920,6 @@
 						>
 					</div>
 
-					<label for="ProxyURL">Proxy URL:</label>
-					<input
-						type="text"
-						name="ProxyURL"
-						id="ProxyURL"
-						value="http://api.scrape.do?token=6178e21ee1a84b90800c21bbd3ec590eff7c36fa576&url="
-						required
-					/>
-
 					<label for="browser">Browser:</label>
 					<select name="browser" id="browser">
 						<option value="random">Random</option>
@@ -1499,26 +1479,6 @@
 				}
 			}
 
-			// Function to validate proxy URL format
-			function isValidProxyURL(string) {
-				if (!string.trim()) return false;
-
-				// Check if it's a valid URL or has the right format for proxy services
-				try {
-					new URL(string);
-					return true;
-				} catch (_) {
-					// If not a valid URL, check if it looks like a proxy service endpoint
-					// Many proxy services have endpoints like: http://service.com/proxy?url=
-					return (
-						string.includes('http') &&
-						(string.includes('url=') ||
-							string.includes('&url=') ||
-							string.endsWith('='))
-					);
-				}
-			}
-
 			// Function to validate all URLs before submission
 			function validateAllURLs() {
 				const urlInputs = document.querySelectorAll('.website-url-input');
@@ -1535,20 +1495,6 @@
 				});
 
 				return invalidUrls;
-			}
-
-			// Function to validate proxy URL
-			function validateProxyURL() {
-				const proxyInput = document.getElementById('ProxyURL');
-				const proxyURL = proxyInput.value.trim();
-
-				if (proxyURL && !isValidProxyURL(proxyURL)) {
-					proxyInput.classList.add('invalid-url');
-					return false;
-				} else {
-					proxyInput.classList.remove('invalid-url');
-					return true;
-				}
 			}
 
 			// Function to add URL with validation
@@ -1740,7 +1686,7 @@
 				}
 			});
 
-			// Update combined URLs when any URL input changes
+			// Update URLs when any URL input changes
 			document.addEventListener('input', function (e) {
 				if (e.target.classList.contains('website-url-input')) {
 					updateTotalProfilesSummary();
@@ -1749,9 +1695,6 @@
 					if (currentProfilesCount > 0) {
 						updateProfileUrlDistribution(currentProfilesCount);
 					}
-				}
-				if (e.target.id === 'ProxyURL') {
-					validateProxyURL();
 				}
 				if (e.target.id === 'profilesAtOnce' || e.target.id === 'openCount') {
 					updateTotalProfilesSummary();
@@ -1919,12 +1862,6 @@
 						.map((item) => `${item.index}. ${item.url}`)
 						.join('\n')}`;
 					alert(errorMessage);
-					return;
-				}
-
-				// Validate proxy URL
-				if (!validateProxyURL()) {
-					alert('Please enter a valid Proxy URL');
 					return;
 				}
 

@@ -11,7 +11,7 @@ function shuffleArray(arr) {
 	return a;
 }
 
-async function generateFingerprint(proxyURL = '', browserName, deviceCategory) {
+async function generateFingerprint(browserName, deviceCategory) {
 	const screenProfiles = [
 		{ width: 1920, height: 1080 },
 		{ width: 1366, height: 768 },
@@ -41,16 +41,21 @@ async function generateFingerprint(proxyURL = '', browserName, deviceCategory) {
 		{ vendor: 'AMD', renderer: 'AMD Radeon Pro 560 OpenGL Engine' }
 	];
 
-	let timezone = 'UTC';
-	if (proxyURL && proxyURL.trim()) {
-		try {
-			const ip = proxyURL.replace(/^http(s)?:\/\//, '').split(':')[0];
-			const geo = await axios.get(`http://ip-api.com/json/${ip}`, { timeout: 5000 });
-			if (geo.data?.timezone) timezone = geo.data.timezone;
-		} catch (e) {
-			console.warn('⚠️ Timezone lookup failed:', e.message);
-		}
-	}
+	// Use a random timezone from a diverse selection
+	const timezones = [
+		'UTC',
+		'America/New_York',
+		'America/Los_Angeles',
+		'America/Chicago',
+		'America/Denver',
+		'Europe/London',
+		'Europe/Paris',
+		'Europe/Berlin',
+		'Asia/Tokyo',
+		'Asia/Shanghai',
+		'Australia/Sydney'
+	];
+	const timezone = timezones[Math.floor(Math.random() * timezones.length)];
 
 	const screen = screenProfiles[Math.floor(Math.random() * screenProfiles.length)];
 	const languages = languageProfiles[Math.floor(Math.random() * languageProfiles.length)];

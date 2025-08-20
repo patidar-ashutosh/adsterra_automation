@@ -49,8 +49,7 @@ function getCycleSpecificIndex(globalIndex, cycle, profilesPerCycle) {
 async function processWindow(
 	windowIndex,
 	browser,
-	combinedURL,
-	proxyURL,
+	url,
 	waitTime,
 	cycle,
 	timeout = 30,
@@ -96,7 +95,7 @@ async function processWindow(
 			windowIndex
 		);
 
-		const fingerprint = await generateFingerprint(proxyURL, browserChoice.name, 'desktop');
+		const fingerprint = await generateFingerprint(browserChoice.name, 'desktop');
 		const userAgent = fingerprint.userAgent;
 
 		// Check if stop was requested before launching browser
@@ -196,10 +195,10 @@ async function processWindow(
 				`🌐 Loading website for Profile ${cycleSpecificIndex} (URL ${urlIndex})...`,
 				windowIndex
 			);
-			log(`🔗 Navigating to: ${combinedURL}`, windowIndex);
+			log(`🔗 Navigating to: ${url}`, windowIndex);
 
 			// Navigate to the page with stop checking
-			const navigationPromise = page.goto(combinedURL, {
+			const navigationPromise = page.goto(url, {
 				waitUntil: 'load',
 				timeout: timeout * 1000 // Convert seconds to milliseconds
 			});
@@ -427,7 +426,6 @@ async function runAutomation(config) {
 		urls,
 		originalUrls,
 		url, // Keep for backward compatibility
-		proxyURL,
 		browser = 'random',
 		openCount = 1,
 		profilesAtOnce = 1,
@@ -474,21 +472,11 @@ async function runAutomation(config) {
 	);
 	log(`📊 Total profiles: ${profilesPerUrl * totalUrls}, Total sessions: ${totalWindows}`);
 
-	// Debug: Show URL construction
+	// Debug: Show URL configuration
 	log(`🔗 Website Configuration:`);
-	log(`📡 Proxy URL: ${proxyURL || 'None'}`);
 	targetUrls.forEach((url, index) => {
 		const originalUrl = originalTargetUrls[index];
-		let finalUrl = url;
-		if (proxyURL && proxyURL.trim()) {
-			// Ensure the proxy URL ends with proper separator
-			let cleanProxyURL = proxyURL.trim();
-			if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
-				cleanProxyURL = cleanProxyURL + '=';
-			}
-			finalUrl = cleanProxyURL + encodeURIComponent(url);
-		}
-		log(`  Website ${index + 1}: ${originalUrl} → ${finalUrl}`);
+		log(`  Website ${index + 1}: ${originalUrl}`);
 	});
 
 	// Run automation cycles
@@ -516,18 +504,6 @@ async function runAutomation(config) {
 			const currentUrl = targetUrls[urlIndex];
 			const originalUrl = originalTargetUrls[urlIndex];
 
-			// Construct the final URL with proxy if needed
-			let finalUrl = currentUrl;
-			if (proxyURL && proxyURL.trim()) {
-				// If proxy URL is provided, combine it with the target URL
-				// Ensure the proxy URL ends with proper separator
-				let cleanProxyURL = proxyURL.trim();
-				if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
-					cleanProxyURL = cleanProxyURL + '=';
-				}
-				finalUrl = cleanProxyURL + encodeURIComponent(currentUrl);
-			}
-
 			for (let profileNum = 1; profileNum <= profilesPerUrl; profileNum++) {
 				const globalProfileIndex = (cycle - 1) * profilesPerUrl * totalUrls + profileIndex;
 				const waitTime = waitTimes[profileIndex - 1];
@@ -536,8 +512,7 @@ async function runAutomation(config) {
 					processWindow(
 						globalProfileIndex,
 						browser,
-						finalUrl, // Use the properly constructed final URL
-						proxyURL,
+						currentUrl, // Use the URL directly
 						waitTime,
 						cycle,
 						timeout,

@@ -53,7 +53,10 @@ async function processWindow(
 	proxyURL,
 	waitTime,
 	cycle,
-	timeout = 30
+	timeout = 30,
+	urlIndex = 1,
+	profileNum = 1,
+	originalUrl = ''
 ) {
 	let browserInstance = null;
 	let context = null;
@@ -64,13 +67,19 @@ async function processWindow(
 	try {
 		// Check if stop was requested before starting
 		if (shouldStop) {
-			log(`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Skipping Profile ${cycleSpecificIndex} (URL ${urlIndex}, Profile ${profileNum}) - automation stopped`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
 		}
 
-		log(`🚀 Opening Profile ${cycleSpecificIndex} (Cycle ${cycle})`, windowIndex);
+		log(
+			`🚀 Opening Profile ${cycleSpecificIndex} (URL ${urlIndex}, Profile ${profileNum}, Cycle ${cycle})`,
+			windowIndex
+		);
 		updateProfileStatus(windowIndex, 'waiting');
 
 		// Select browser for this specific window
@@ -83,7 +92,7 @@ async function processWindow(
 		}
 
 		log(
-			`🌐 Using browser: ${browserChoice.name} for Profile ${cycleSpecificIndex}`,
+			`🌐 Using browser: ${browserChoice.name} for Profile ${cycleSpecificIndex} (URL ${urlIndex})`,
 			windowIndex
 		);
 
@@ -92,7 +101,10 @@ async function processWindow(
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
-			log(`⏹️ Skipping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Skipping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
@@ -102,7 +114,10 @@ async function processWindow(
 
 		// Check if stop was requested after browser launch
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+				windowIndex
+			);
 			try {
 				await browserInstance.close();
 			} catch (e) {
@@ -118,7 +133,10 @@ async function processWindow(
 
 		// Check if stop was requested before creating context
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
@@ -136,7 +154,10 @@ async function processWindow(
 
 		// Check if stop was requested after context creation
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
@@ -146,7 +167,10 @@ async function processWindow(
 
 		// Check if stop was requested after page creation
 		if (shouldStop) {
-			log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+			log(
+				`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 			return;
@@ -159,13 +183,20 @@ async function processWindow(
 		try {
 			// Check if stop was requested before starting navigation
 			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+				log(
+					`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+					windowIndex
+				);
 				updateProfileStatus(windowIndex, 'failed');
 				failedWindows++; // Increment failed count
 				return;
 			}
 
-			log(`🌐 Loading website for Profile ${cycleSpecificIndex}...`, windowIndex);
+			log(
+				`🌐 Loading website for Profile ${cycleSpecificIndex} (URL ${urlIndex})...`,
+				windowIndex
+			);
+			log(`🔗 Navigating to: ${combinedURL}`, windowIndex);
 
 			// Navigate to the page with stop checking
 			const navigationPromise = page.goto(combinedURL, {
@@ -192,7 +223,7 @@ async function processWindow(
 			} catch (navError) {
 				if (navError.message === 'STOP_REQUESTED') {
 					log(
-						`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`,
+						`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
 						windowIndex
 					);
 					updateProfileStatus(windowIndex, 'failed');
@@ -204,13 +235,19 @@ async function processWindow(
 
 			// Check if stop was requested after page load
 			if (shouldStop) {
-				log(`⏹️ Stopping Profile ${cycleSpecificIndex} - automation stopped`, windowIndex);
+				log(
+					`⏹️ Stopping Profile ${cycleSpecificIndex} (URL ${urlIndex}) - automation stopped`,
+					windowIndex
+				);
 				updateProfileStatus(windowIndex, 'failed');
 				failedWindows++; // Increment failed count
 				return;
 			}
 
-			log(`🌐 Page loaded for Profile ${cycleSpecificIndex} (Cycle ${cycle})`, windowIndex);
+			log(
+				`🌐 Page loaded for Profile ${cycleSpecificIndex} (URL ${urlIndex}, Cycle ${cycle})`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'running');
 
 			// 🎯 CRITICAL FIX: Start tracking AFTER page is loaded
@@ -219,7 +256,10 @@ async function processWindow(
 				browserInstance,
 				startTime: Date.now(), // Timer starts NOW, after page load
 				waitTime,
-				cycle
+				cycle,
+				urlIndex,
+				profileNum,
+				originalUrl
 			});
 
 			log(`⏱️ Wait timer started (${waitTime}s allocated)`, windowIndex);
@@ -249,7 +289,7 @@ async function processWindow(
 			if (page && !page.isClosed() && !isCompleted) {
 				isCompleted = true; // Mark as completed to prevent double processing
 				log(
-					`⏰ Wait time (${waitTime}s) expired - force closing Profile ${cycleSpecificIndex}`,
+					`⏰ Wait time (${waitTime}s) expired - force closing Profile ${cycleSpecificIndex} (URL ${urlIndex})`,
 					windowIndex
 				);
 				updateProfileStatus(windowIndex, 'success'); // Mark as success since it completed its allocated time
@@ -277,7 +317,7 @@ async function processWindow(
 					completedWindows++;
 
 					log(
-						`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed by timeout (${completedWindows}/${totalWindows})`,
+						`✅ Profile ${cycleSpecificIndex} (URL ${urlIndex}, Cycle ${cycle}) completed by timeout (${completedWindows}/${totalWindows})`,
 						windowIndex
 					);
 				} catch (timeoutCloseError) {
@@ -310,7 +350,7 @@ async function processWindow(
 		if (page && !page.isClosed() && !isCompleted) {
 			isCompleted = true; // Mark as completed to prevent double processing
 			log(
-				`✅ Profile ${cycleSpecificIndex} (Cycle ${cycle}) completed (${
+				`✅ Profile ${cycleSpecificIndex} (URL ${urlIndex}, Cycle ${cycle}) completed (${
 					completedWindows + 1
 				}/${totalWindows})`,
 				windowIndex
@@ -321,7 +361,10 @@ async function processWindow(
 	} catch (err) {
 		// Only mark as failed if not already completed by timeout
 		if (!isCompleted) {
-			log(`❌ Error in Profile ${cycleSpecificIndex}: ${err.message}`, windowIndex);
+			log(
+				`❌ Error in Profile ${cycleSpecificIndex} (URL ${urlIndex}): ${err.message}`,
+				windowIndex
+			);
 			updateProfileStatus(windowIndex, 'failed');
 			failedWindows++; // Increment failed count
 		}
@@ -343,7 +386,7 @@ async function processWindow(
 			}
 		} catch (closePageErr) {
 			log(
-				`⚠️ Failed to close page for Profile ${cycleSpecificIndex}: ${closePageErr.message}`,
+				`⚠️ Failed to close page for Profile ${cycleSpecificIndex} (URL ${urlIndex}): ${closePageErr.message}`,
 				windowIndex
 			);
 		}
@@ -381,7 +424,9 @@ async function processWindow(
 
 async function runAutomation(config) {
 	const {
-		url,
+		urls,
+		originalUrls,
+		url, // Keep for backward compatibility
 		proxyURL,
 		browser = 'random',
 		openCount = 1,
@@ -391,22 +436,60 @@ async function runAutomation(config) {
 		maxWaitTime = 55
 	} = config;
 
+	// Handle both single URL (backward compatibility) and multiple URLs
+	let targetUrls = urls || [];
+	let originalTargetUrls = originalUrls || [];
+
+	if (!targetUrls.length && url) {
+		targetUrls = [url];
+		originalTargetUrls = [url];
+	}
+
+	if (!targetUrls.length) {
+		log('❌ No URLs provided for automation');
+		return;
+	}
+
 	// Clear previous profile logs
 	clearProfileLogs();
 
 	const totalCycles = Math.max(1, Math.min(parseInt(openCount), 20));
-	profilesPerCycle = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
+	const profilesPerUrl = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
+	const totalUrls = targetUrls.length;
 
-	totalWindows = totalCycles * profilesPerCycle;
+	totalWindows = totalCycles * profilesPerUrl * totalUrls;
 	completedWindows = 0;
 	failedWindows = 0; // Reset failed count
 	successWindows = 0; // Reset success count
 	isAutomationInProgress = true; // Set automation as in progress
 	currentCycle = 1; // Initialize current cycle to 1
+	profilesPerCycle = profilesPerUrl * totalUrls; // Total profiles per cycle across all URLs
 	updateGlobalCycleInfo(currentCycle, profilesPerCycle); // Update cycle info for logs
 
 	// Reset stop state at the beginning
 	resetStopState();
+
+	log(
+		`🚀 Starting automation with ${totalUrls} URLs, ${profilesPerUrl} profiles per URL, ${totalCycles} cycles`
+	);
+	log(`📊 Total profiles: ${profilesPerUrl * totalUrls}, Total windows: ${totalWindows}`);
+
+	// Debug: Show URL construction
+	log(`🔗 URL Configuration:`);
+	log(`📡 Proxy URL: ${proxyURL || 'None'}`);
+	targetUrls.forEach((url, index) => {
+		const originalUrl = originalTargetUrls[index];
+		let finalUrl = url;
+		if (proxyURL && proxyURL.trim()) {
+			// Ensure the proxy URL ends with proper separator
+			let cleanProxyURL = proxyURL.trim();
+			if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
+				cleanProxyURL = cleanProxyURL + '=';
+			}
+			finalUrl = cleanProxyURL + encodeURIComponent(url);
+		}
+		log(`  URL ${index + 1}: ${originalUrl} → ${finalUrl}`);
+	});
 
 	// Run automation cycles
 	for (let cycle = 1; cycle <= totalCycles; cycle++) {
@@ -424,20 +507,49 @@ async function runAutomation(config) {
 
 		log(`🔄 Starting Cycle ${cycle}/${totalCycles}`);
 
-		// Create promises for all profiles in this cycle
-		const waitTimes = getRandomWaitTimes(profilesPerCycle, minWaitTime, maxWaitTime);
+		// Create promises for all profiles across all URLs in this cycle
+		const waitTimes = getRandomWaitTimes(profilesPerUrl * totalUrls, minWaitTime, maxWaitTime);
+		const promises = [];
 
-		const promises = Array.from({ length: profilesPerCycle }, (_, i) =>
-			processWindow(
-				(cycle - 1) * profilesPerCycle + i + 1,
-				browser,
-				url,
-				proxyURL,
-				waitTimes[i],
-				cycle,
-				timeout
-			)
-		);
+		let profileIndex = 1;
+		for (let urlIndex = 0; urlIndex < totalUrls; urlIndex++) {
+			const currentUrl = targetUrls[urlIndex];
+			const originalUrl = originalTargetUrls[urlIndex];
+
+			// Construct the final URL with proxy if needed
+			let finalUrl = currentUrl;
+			if (proxyURL && proxyURL.trim()) {
+				// If proxy URL is provided, combine it with the target URL
+				// Ensure the proxy URL ends with proper separator
+				let cleanProxyURL = proxyURL.trim();
+				if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
+					cleanProxyURL = cleanProxyURL + '=';
+				}
+				finalUrl = cleanProxyURL + encodeURIComponent(currentUrl);
+			}
+
+			for (let profileNum = 1; profileNum <= profilesPerUrl; profileNum++) {
+				const globalProfileIndex = (cycle - 1) * profilesPerUrl * totalUrls + profileIndex;
+				const waitTime = waitTimes[profileIndex - 1];
+
+				promises.push(
+					processWindow(
+						globalProfileIndex,
+						browser,
+						finalUrl, // Use the properly constructed final URL
+						proxyURL,
+						waitTime,
+						cycle,
+						timeout,
+						urlIndex + 1,
+						profileNum,
+						originalUrl
+					)
+				);
+
+				profileIndex++;
+			}
+		}
 
 		await Promise.allSettled(promises);
 
@@ -514,7 +626,10 @@ function getStatus() {
 			elapsed: Math.round(elapsed),
 			remaining,
 			waitTime: data.waitTime,
-			cycle: data.cycle
+			cycle: data.cycle,
+			urlIndex: data.urlIndex || 1,
+			profileNum: data.profileNum || 1,
+			originalUrl: data.originalUrl || ''
 		};
 	});
 

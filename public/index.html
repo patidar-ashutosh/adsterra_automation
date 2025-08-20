@@ -259,6 +259,27 @@
 				color: #fff;
 			}
 
+			.profile-url-info {
+				background: rgba(33, 150, 243, 0.1);
+				color: #2196f3;
+				font-size: 12px;
+				font-weight: 500;
+				padding: 8px 12px;
+				border-radius: 8px;
+				margin: 10px 0;
+				border: 1px solid rgba(33, 150, 243, 0.3);
+				text-align: center;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				transition: all 0.3s ease;
+			}
+
+			.profile-url-info:hover {
+				background: rgba(33, 150, 243, 0.2);
+				border-color: rgba(33, 150, 243, 0.5);
+			}
+
 			.profile-log-area {
 				width: 100%;
 				height: 250px;
@@ -474,6 +495,215 @@
 				border: 1px solid rgba(255, 255, 255, 0.2);
 			}
 
+			/* Multiple URLs Section Styling */
+			.urls-section {
+				margin-bottom: 20px;
+			}
+
+			#urls-container {
+				margin-bottom: 15px;
+			}
+
+			.url-input-group {
+				margin-bottom: 10px;
+			}
+
+			.url-input-row {
+				display: flex;
+				gap: 10px;
+				align-items: center;
+			}
+
+			.blog-url-input {
+				flex: 1;
+				margin-top: 0;
+			}
+
+			.remove-url-btn {
+				background: linear-gradient(135deg, #f44336, #d32f2f);
+				color: #ffffff;
+				border: none;
+				border-radius: 50%;
+				width: 35px;
+				height: 35px;
+				font-size: 18px;
+				font-weight: bold;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.3s ease;
+				margin-top: 0;
+				flex-shrink: 0;
+			}
+
+			.remove-url-btn:hover {
+				background: linear-gradient(135deg, #d32f2f, #f44336);
+				transform: scale(1.1);
+				box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+			}
+
+			.add-url-btn {
+				background: linear-gradient(135deg, #2196f3, #1976d2);
+				color: #ffffff;
+				border: none;
+				border-radius: 25px;
+				padding: 10px 20px;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				margin-top: 0;
+				width: auto;
+			}
+
+			.add-url-btn:hover {
+				background: linear-gradient(135deg, #1976d2, #2196f3);
+				transform: translateY(-2px);
+				box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+			}
+
+			.url-help {
+				background: rgba(33, 150, 243, 0.1) !important;
+				border-color: rgba(33, 150, 243, 0.3) !important;
+				color: #81c784 !important;
+			}
+
+			.profile-help {
+				background: rgba(255, 152, 0, 0.1) !important;
+				border-color: rgba(255, 152, 0, 0.3) !important;
+				color: #ffcc80 !important;
+			}
+
+			/* Total Profiles Summary */
+			.total-profiles-summary {
+				background: rgba(76, 175, 80, 0.1);
+				border: 1px solid rgba(76, 175, 80, 0.3);
+				border-radius: 15px;
+				padding: 20px;
+				margin: 25px 0;
+				backdrop-filter: blur(10px);
+			}
+
+			.total-profiles-summary h4 {
+				text-align: center;
+				color: #4caf50;
+				margin: 0 0 20px 0;
+				font-size: 1.2em;
+				font-weight: 600;
+			}
+
+			.summary-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 15px;
+			}
+
+			.summary-item {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 12px 15px;
+				background: rgba(0, 0, 0, 0.3);
+				border-radius: 10px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.summary-label {
+				color: #ffffff;
+				font-weight: 500;
+				font-size: 14px;
+			}
+
+			.summary-value {
+				color: #4caf50;
+				font-weight: bold;
+				font-size: 16px;
+				background: rgba(76, 175, 80, 0.2);
+				padding: 4px 12px;
+				border-radius: 20px;
+				min-width: 40px;
+				text-align: center;
+			}
+
+			/* Enhanced URL input styling */
+			.blog-url-input:focus {
+				border-color: #2196f3;
+				box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
+			}
+
+			/* Animation for new URL inputs */
+			.url-input-group {
+				animation: slideIn 0.3s ease;
+			}
+
+			@keyframes slideIn {
+				from {
+					opacity: 0;
+					transform: translateY(-10px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			/* URL input validation styling */
+			.blog-url-input:invalid {
+				border-color: #f44336;
+				box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+			}
+
+			.blog-url-input:valid {
+				border-color: #4caf50;
+			}
+
+			.blog-url-input.valid-url {
+				border-color: #4caf50;
+				box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+			}
+
+			.blog-url-input.invalid-url {
+				border-color: #f44336;
+				box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+			}
+
+			/* Enhanced summary styling */
+			.summary-item:hover {
+				background: rgba(0, 0, 0, 0.4);
+				border-color: rgba(76, 175, 80, 0.5);
+				transform: translateY(-2px);
+				transition: all 0.3s ease;
+			}
+
+			/* Responsive adjustments for multiple URLs */
+			@media (max-width: 768px) {
+				.url-input-row {
+					flex-direction: column;
+					gap: 8px;
+				}
+
+				.remove-url-btn {
+					align-self: flex-end;
+				}
+
+				.summary-grid {
+					grid-template-columns: 1fr;
+					gap: 10px;
+				}
+
+				.summary-item {
+					flex-direction: column;
+					gap: 8px;
+					text-align: center;
+				}
+
+				.add-url-btn {
+					width: 100%;
+					text-align: center;
+				}
+			}
+
 			/* Popup Overlay */
 			.popup-overlay {
 				position: fixed;
@@ -660,14 +890,39 @@
 
 			<div class="form-container">
 				<form id="automationForm">
-					<label for="blogURL">Blog URL:</label>
-					<input
-						type="text"
-						name="blogURL"
-						id="blogURL"
-						value="https://dirtypagesblog.blogspot.com/2025/08/midnight-with-stranger-ultimate-one.html"
-						required
-					/>
+					<!-- Multiple URLs Section -->
+					<div class="urls-section">
+						<label for="urls-container">Blog URLs:</label>
+						<div id="urls-container">
+							<div class="url-input-group">
+								<div class="url-input-row">
+									<input
+										type="text"
+										class="blog-url-input"
+										name="blogURLs[]"
+										value="https://dirtypagesblog.blogspot.com/2025/08/midnight-with-stranger-ultimate-one.html"
+										placeholder="Enter blog URL"
+										required
+									/>
+									<button
+										type="button"
+										class="remove-url-btn"
+										onclick="removeUrl(this)"
+										style="display: none"
+									>
+										×
+									</button>
+								</div>
+							</div>
+						</div>
+						<button type="button" id="addUrlBtn" class="add-url-btn">
+							+ Add Another URL
+						</button>
+						<small class="url-help"
+							>Add multiple URLs to automate multiple blogs simultaneously. Each URL
+							will get its own set of profiles.</small
+						>
+					</div>
 
 					<label for="ProxyURL">Proxy URL:</label>
 					<input
@@ -678,17 +933,18 @@
 						required
 					/>
 
-					<label for="combinedURL">Combined URL</label>
+					<!-- Combined URLs Preview -->
+					<label for="combinedURLs">Combined URLs Preview:</label>
 					<textarea
-						id="combinedURL"
-						name="combinedURL"
+						id="combinedURLs"
+						name="combinedURLs"
 						disabled
 						style="
 							width: 100%;
 							font-family: monospace;
 							resize: vertical;
-							min-height: 100px;
-							max-height: 120px;
+							min-height: 120px;
+							max-height: 200px;
 							overflow: auto;
 						"
 					></textarea>
@@ -712,7 +968,7 @@
 						required
 					/>
 
-					<label for="profilesAtOnce">Profiles at Once:</label>
+					<label for="profilesAtOnce">Profiles per URL:</label>
 					<input
 						type="number"
 						name="profilesAtOnce"
@@ -722,6 +978,10 @@
 						value="2"
 						required
 					/>
+					<small class="profile-help"
+						>This is the number of profiles that will run for EACH URL
+						simultaneously.</small
+					>
 
 					<label for="timeout">Website Loading Timeout (seconds):</label>
 					<input
@@ -785,6 +1045,29 @@
 						>Recommended: 55 seconds. This is the maximum time each profile will stay on
 						the website.</small
 					>
+
+					<!-- Total Profiles Summary -->
+					<div class="total-profiles-summary">
+						<h4>Total Profiles Summary</h4>
+						<div class="summary-grid">
+							<div class="summary-item">
+								<span class="summary-label">Total URLs:</span>
+								<span class="summary-value" id="totalUrls">1</span>
+							</div>
+							<div class="summary-item">
+								<span class="summary-label">Profiles per URL:</span>
+								<span class="summary-value" id="profilesPerUrl">2</span>
+							</div>
+							<div class="summary-item">
+								<span class="summary-label">Total Profiles:</span>
+								<span class="summary-value" id="totalProfiles">2</span>
+							</div>
+							<div class="summary-item">
+								<span class="summary-label">Total Windows:</span>
+								<span class="summary-value" id="totalWindows">6</span>
+							</div>
+						</div>
+					</div>
 
 					<div class="control-buttons">
 						<button type="submit" id="startButton">Start Automation</button>
@@ -979,6 +1262,7 @@
 							<div class="profile-log-title">Profile ${i} <span class="profile-time" id="profileTime${i}"></span></div>
 							<div class="profile-log-status waiting" id="profileStatus${i}">Waiting</div>
 						</div>
+						<div class="profile-url-info" id="profileUrlInfo${i}">URL: Loading...</div>
 						<textarea class="profile-log-area" id="profileLog${i}" readonly></textarea>
 					`;
 					profileLogsGrid.appendChild(logItem);
@@ -991,6 +1275,39 @@
 			// Function to create profile log areas (for initial setup)
 			function createProfileLogs(profilesCount) {
 				createProfileLogsForCycle(profilesCount, 1);
+
+				// Update URL info for each profile based on current URL configuration
+				updateProfileUrlDistribution(profilesCount);
+			}
+
+			// Function to update profile URL distribution
+			function updateProfileUrlDistribution(profilesCount) {
+				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urls = Array.from(urlInputs)
+					.map((input) => input.value.trim())
+					.filter((url) => url);
+				const profilesPerUrl =
+					parseInt(document.getElementById('profilesAtOnce').value) || 1;
+
+				if (urls.length === 0) return;
+
+				for (let i = 1; i <= profilesCount; i++) {
+					const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
+					if (urlInfoElement) {
+						// Calculate which URL this profile will work on
+						const urlIndex = Math.floor((i - 1) / profilesPerUrl) % urls.length;
+						const url = urls[urlIndex];
+
+						try {
+							const urlObj = new URL(url);
+							const domain = urlObj.hostname;
+							urlInfoElement.textContent = `URL ${urlIndex + 1}: ${domain}`;
+							urlInfoElement.title = url; // Full URL on hover
+						} catch (e) {
+							urlInfoElement.textContent = `URL ${urlIndex + 1}: ${url}`;
+						}
+					}
+				}
 			}
 
 			// Function to append log to specific profile
@@ -1009,6 +1326,14 @@
 						logArea.value = '';
 					}
 				});
+
+				// Clear URL info as well
+				for (let i = 1; i <= currentProfilesCount; i++) {
+					const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
+					if (urlInfoElement) {
+						urlInfoElement.textContent = 'URL: Loading...';
+					}
+				}
 			}
 
 			// Function to update profile status
@@ -1027,8 +1352,12 @@
 				// Clear all profile times first
 				for (let i = 1; i <= currentProfilesCount; i++) {
 					const timeElement = document.getElementById(`profileTime${i}`);
+					const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
 					if (timeElement) {
 						timeElement.textContent = '';
+					}
+					if (urlInfoElement) {
+						urlInfoElement.textContent = 'URL: Waiting...';
 					}
 				}
 
@@ -1037,8 +1366,24 @@
 					const cycleSpecificIndex =
 						((window.windowIndex - 1) % currentProfilesCount) + 1;
 					const timeElement = document.getElementById(`profileTime${cycleSpecificIndex}`);
+					const urlInfoElement = document.getElementById(
+						`profileUrlInfo${cycleSpecificIndex}`
+					);
+
 					if (timeElement) {
 						timeElement.textContent = `(${window.remaining}s left)`;
+					}
+
+					if (urlInfoElement && window.originalUrl) {
+						// Extract domain from URL for cleaner display
+						try {
+							const url = new URL(window.originalUrl);
+							const domain = url.hostname;
+							urlInfoElement.textContent = `URL ${window.urlIndex}: ${domain}`;
+							urlInfoElement.title = window.originalUrl; // Full URL on hover
+						} catch (e) {
+							urlInfoElement.textContent = `URL ${window.urlIndex}: ${window.originalUrl}`;
+						}
 					}
 				});
 			}
@@ -1152,15 +1497,190 @@
 				}
 			}
 
-			// Update combined URL field live
-			function updateCombinedURL() {
-				const blogURLValue = document.getElementById('blogURL').value;
-				const proxyURLValue = document.getElementById('ProxyURL').value;
-				document.getElementById('combinedURL').value =
-					proxyURLValue + encodeURIComponent(blogURLValue);
+			// Function to validate URL format
+			function isValidURL(string) {
+				try {
+					new URL(string);
+					return true;
+				} catch (_) {
+					return false;
+				}
 			}
-			document.getElementById('blogURL').addEventListener('input', updateCombinedURL);
-			updateCombinedURL();
+
+			// Function to validate all URLs before submission
+			function validateAllURLs() {
+				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const invalidUrls = [];
+
+				urlInputs.forEach((input, index) => {
+					const url = input.value.trim();
+					if (url && !isValidURL(url)) {
+						invalidUrls.push({ index: index + 1, url: url });
+						input.classList.add('invalid-url');
+					} else {
+						input.classList.remove('invalid-url');
+					}
+				});
+
+				return invalidUrls;
+			}
+
+			// Function to add URL with validation
+			function addUrl() {
+				const urlsContainer = document.getElementById('urls-container');
+				const urlGroups = urlsContainer.querySelectorAll('.url-input-group');
+				const newIndex = urlGroups.length + 1;
+
+				const newUrlGroup = document.createElement('div');
+				newUrlGroup.className = 'url-input-group';
+				newUrlGroup.innerHTML = `
+					<div class="url-input-row">
+						<input
+							type="text"
+							class="blog-url-input"
+							name="blogURLs[]"
+							placeholder="Enter blog URL ${newIndex}"
+							required
+						/>
+						<button type="button" class="remove-url-btn" onclick="removeUrl(this)">×</button>
+					</div>
+				`;
+
+				urlsContainer.appendChild(newUrlGroup);
+
+				// Show remove buttons for all URLs when there are more than 1
+				updateRemoveButtons();
+				updateCombinedURLs();
+				updateTotalProfilesSummary();
+
+				// Update profile URL distribution if profiles are already created
+				if (currentProfilesCount > 0) {
+					updateProfileUrlDistribution(currentProfilesCount);
+				}
+
+				// Focus on the new input
+				const newInput = newUrlGroup.querySelector('.blog-url-input');
+				newInput.focus();
+
+				// Add validation event listener
+				newInput.addEventListener('input', function () {
+					if (this.value.trim()) {
+						if (isValidURL(this.value.trim())) {
+							this.classList.remove('invalid-url');
+							this.classList.add('valid-url');
+						} else {
+							this.classList.remove('valid-url');
+							this.classList.add('invalid-url');
+						}
+					} else {
+						this.classList.remove('invalid-url', 'valid-url');
+					}
+				});
+			}
+
+			function removeUrl(button) {
+				const urlGroup = button.closest('.url-input-group');
+				urlGroup.remove();
+
+				// Update remove buttons visibility
+				updateRemoveButtons();
+				updateCombinedURLs();
+				updateTotalProfilesSummary();
+
+				// Update profile URL distribution if profiles are already created
+				if (currentProfilesCount > 0) {
+					updateProfileUrlDistribution(currentProfilesCount);
+				}
+			}
+
+			function updateRemoveButtons() {
+				const urlGroups = document.querySelectorAll('.url-input-group');
+				const removeButtons = document.querySelectorAll('.remove-url-btn');
+
+				// Show remove button only if there's more than 1 URL
+				removeButtons.forEach((button) => {
+					button.style.display = urlGroups.length > 1 ? 'flex' : 'none';
+				});
+			}
+
+			function updateCombinedURLs() {
+				const proxyURL = document.getElementById('ProxyURL').value;
+				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const combinedURLsTextarea = document.getElementById('combinedURLs');
+
+				let combinedText = '';
+				urlInputs.forEach((input, index) => {
+					if (input.value.trim()) {
+						const url = input.value.trim();
+						// Show both the original URL and the combined URL for clarity
+						combinedText += `URL ${index + 1}:\n`;
+						combinedText += `  Original: ${url}\n`;
+						if (proxyURL && proxyURL.trim()) {
+							const combinedURL = proxyURL + encodeURIComponent(url);
+							combinedText += `  Combined: ${combinedURL}\n`;
+						}
+						combinedText += '\n';
+					}
+				});
+
+				combinedURLsTextarea.value = combinedText.trim();
+			}
+
+			function updateTotalProfilesSummary() {
+				const urlCount = document.querySelectorAll('.blog-url-input').length;
+				const profilesPerUrl =
+					parseInt(document.getElementById('profilesAtOnce').value) || 0;
+				const cycles = parseInt(document.getElementById('openCount').value) || 0;
+
+				const totalProfiles = urlCount * profilesPerUrl;
+				const totalWindows = totalProfiles * cycles;
+
+				document.getElementById('totalUrls').textContent = urlCount;
+				document.getElementById('profilesPerUrl').textContent = profilesPerUrl;
+				document.getElementById('totalProfiles').textContent = totalProfiles;
+				document.getElementById('totalWindows').textContent = totalWindows;
+			}
+
+			// Event listeners for multiple URLs
+			document.getElementById('addUrlBtn').addEventListener('click', addUrl);
+
+			// Add validation to existing URL input
+			document.addEventListener('DOMContentLoaded', function () {
+				const existingUrlInput = document.querySelector('.blog-url-input');
+				if (existingUrlInput) {
+					existingUrlInput.addEventListener('input', function () {
+						if (this.value.trim()) {
+							if (isValidURL(this.value.trim())) {
+								this.classList.remove('invalid-url');
+								this.classList.add('valid-url');
+							} else {
+								this.classList.remove('valid-url');
+								this.classList.add('invalid-url');
+							}
+						} else {
+							this.classList.remove('invalid-url', 'valid-url');
+						}
+					});
+				}
+			});
+
+			// Update combined URLs when any URL input changes
+			document.addEventListener('input', function (e) {
+				if (e.target.classList.contains('blog-url-input') || e.target.id === 'ProxyURL') {
+					updateCombinedURLs();
+				}
+				if (e.target.id === 'profilesAtOnce' || e.target.id === 'openCount') {
+					updateTotalProfilesSummary();
+
+					// Update profile URL distribution if profiles are already created
+					if (currentProfilesCount > 0) {
+						updateProfileUrlDistribution(currentProfilesCount);
+					}
+				}
+			});
+
+			// Initialize the summary
+			updateTotalProfilesSummary();
 
 			// Track current cycle for UI updates
 			let currentCycle = 1; // Initialize to 1 to match backend
@@ -1212,7 +1732,7 @@
 						// Add active window details in compact format
 						if (data.activeWindowDetails && data.activeWindowDetails.length > 0) {
 							const activeDetails = data.activeWindowDetails
-								.map((w) => `P${w.windowIndex}(C${w.cycle})`)
+								.map((w) => `P${w.windowIndex}(C${w.cycle},U${w.urlIndex || 1})`)
 								.join(', ');
 
 							// Update profile times in log headers
@@ -1288,15 +1808,44 @@
 
 			form.addEventListener('submit', async (e) => {
 				e.preventDefault();
+
+				// Validate all URLs first
+				const invalidUrls = validateAllURLs();
+				if (invalidUrls.length > 0) {
+					const errorMessage = `Please fix the following invalid URLs:\n${invalidUrls
+						.map((item) => `${item.index}. ${item.url}`)
+						.join('\n')}`;
+					alert(errorMessage);
+					return;
+				}
+
 				const formData = new FormData(form);
 				const payload = Object.fromEntries(formData.entries());
+
+				// Collect all URLs
+				const urlInputs = document.querySelectorAll('.blog-url-input');
+				const urls = Array.from(urlInputs)
+					.map((input) => input.value.trim())
+					.filter((url) => url);
+
+				// Validate that we have at least one URL
+				if (urls.length === 0) {
+					alert('Please enter at least one blog URL');
+					return;
+				}
 
 				// Show start confirmation popup
 				const startContent = `
 					<p style="margin-bottom: 20px; color: #ff9800; font-weight: 600;">Please review your automation settings:</p>
 					<div class="data-item">
-						<span class="data-label">Blog URL:</span>
-						<span class="data-value">${payload.blogURL}</span>
+						<span class="data-label">Total URLs:</span>
+						<span class="data-value">${urls.length}</span>
+					</div>
+					<div class="data-item">
+						<span class="data-label">Blog URLs:</span>
+						<span class="data-value" style="max-width: 300px; word-break: break-all;">
+							${urls.map((url, index) => `${index + 1}. ${url}`).join('<br>')}
+						</span>
 					</div>
 					<div class="data-item">
 						<span class="data-label">Browser:</span>
@@ -1307,7 +1856,7 @@
 						<span class="data-value">${payload.openCount}</span>
 					</div>
 					<div class="data-item">
-						<span class="data-label">Profiles per Cycle:</span>
+						<span class="data-label">Profiles per URL:</span>
 						<span class="data-value">${payload.profilesAtOnce}</span>
 					</div>
 					<div class="data-item">
@@ -1319,7 +1868,10 @@
 						<span class="data-value">${payload.minWaitTime}-${payload.maxWaitTime}s</span>
 					</div>
 					<p style="margin-top: 20px; color: #4caf50; font-weight: 600;">Total Profiles: ${
-						payload.openCount * payload.profilesAtOnce
+						urls.length * payload.profilesAtOnce
+					}</p>
+					<p style="margin-top: 10px; color: #2196f3; font-weight: 600;">Total Windows: ${
+						urls.length * payload.profilesAtOnce * payload.openCount
 					}</p>
 				`;
 
@@ -1329,19 +1881,25 @@
 				popupConfirm.onclick = async () => {
 					hidePopup();
 
-					// Get profiles count and create log areas
-					const profilesCount = parseInt(payload.profilesAtOnce) || 2;
-					createProfileLogs(profilesCount);
+					// Get total profiles count and create log areas
+					const totalProfiles = urls.length * parseInt(payload.profilesAtOnce);
+					createProfileLogs(totalProfiles);
 
 					// Immediately set automation state to prevent button flickering
 					setAutomationState(true);
 					statusDiv.innerText = 'Status: Starting automation...';
 
 					try {
+						// Prepare payload with URLs array
+						const automationPayload = {
+							...payload,
+							blogURLs: urls
+						};
+
 						const res = await fetch('/open-url', {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify(payload)
+							body: JSON.stringify(automationPayload)
 						});
 
 						const result = await res.json();
@@ -1349,7 +1907,7 @@
 						if (result.success) {
 							// Clear any existing logs and add initial messages
 							clearAllProfileLogs();
-							for (let i = 1; i <= profilesCount; i++) {
+							for (let i = 1; i <= totalProfiles; i++) {
 								appendProfileLog(i, `🚀 Starting Profile ${i}`);
 								appendProfileLog(i, `⏳ Waiting for automation to start...`);
 							}

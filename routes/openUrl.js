@@ -6,7 +6,8 @@ const { runAutomation } = require('../automation');
 router.post('/', async (req, res) => {
 	try {
 		const {
-			blogURL,
+			blogURLs,
+			blogURL, // Keep for backward compatibility
 			ProxyURL,
 			browser,
 			openCount,
@@ -16,22 +17,54 @@ router.post('/', async (req, res) => {
 			maxWaitTime
 		} = req.body;
 
+		// Handle both single URL (backward compatibility) and multiple URLs
+		let urls = [];
+		if (blogURLs && Array.isArray(blogURLs)) {
+			urls = blogURLs;
+		} else if (blogURL) {
+			urls = [blogURL];
+		}
+
 		// Input validation
-		if (!blogURL || !ProxyURL) {
+		if (!urls || urls.length === 0) {
 			return res.status(400).json({
 				success: false,
-				error: 'Missing blogURL or ProxyURL'
+				error: 'Missing blog URLs'
 			});
 		}
 
-		// Validate URL format
-		try {
-			new URL(blogURL);
-		} catch (urlError) {
+		if (!ProxyURL) {
 			return res.status(400).json({
 				success: false,
-				error: 'Invalid blogURL format'
+				error: 'Missing ProxyURL'
 			});
+		}
+
+		// Validate and clean proxy URL
+		let cleanProxyURL = ProxyURL.trim();
+		if (!cleanProxyURL.endsWith('=') && !cleanProxyURL.endsWith('&')) {
+			// Add separator if not present
+			cleanProxyURL = cleanProxyURL + '=';
+		}
+
+		// Validate each URL format and clean them
+		const cleanedUrls = [];
+		for (let i = 0; i < urls.length; i++) {
+			try {
+				let urlString = urls[i].trim();
+				// Add protocol if missing
+				if (!urlString.startsWith('http://') && !urlString.startsWith('https://')) {
+					urlString = 'https://' + urlString;
+				}
+
+				const url = new URL(urlString);
+				cleanedUrls.push(url.toString());
+			} catch (urlError) {
+				return res.status(400).json({
+					success: false,
+					error: `Invalid URL format at position ${i + 1}: ${urls[i]}`
+				});
+			}
 		}
 
 		// Validate numeric inputs
@@ -83,25 +116,43 @@ router.post('/', async (req, res) => {
 			});
 		}
 
-		const combinedURL = ProxyURL + encodeURIComponent(blogURL);
-		// const combinedURL = 'https://getmodsapk.com/';
+		// Calculate total profiles and windows
+		const totalProfiles = cleanedUrls.length * profiles;
+		const totalWindows = totalProfiles * cycles;
+
+		// Check if total windows exceed reasonable limits
+		if (totalWindows > 200) {
+			return res.status(400).json({
+				success: false,
+				error: `Total windows (${totalWindows}) exceeds maximum limit of 200. Please reduce URLs, profiles, or cycles.`
+			});
+		}
+
+		// Prepare combined URLs for each blog
+		// const combinedURLs = urls.map((url) => encodeURIComponent(url));
+		const combinedURLs = cleanedUrls; // Send clean URLs, let automation handle proxy combination
 
 		// Send initial response
 		res.json({
 			success: true,
 			started: true,
-			url: combinedURL,
+			urls: cleanedUrls,
+			combinedURLs: combinedURLs,
+			totalUrls: cleanedUrls.length,
+			profilesPerUrl: profiles,
+			totalProfiles: totalProfiles,
 			cycles,
-			profiles,
 			timeout: pageTimeout,
 			minWait,
-			maxWait
+			maxWait,
+			totalWindows
 		});
 
-		// Run automation in background
+		// Run automation in background with multiple URLs
 		runAutomation({
-			url: combinedURL,
-			proxyURL: ProxyURL,
+			urls: combinedURLs,
+			originalUrls: cleanedUrls,
+			proxyURL: cleanProxyURL, // Use the cleaned proxy URL
 			browser,
 			openCount: cycles,
 			profilesAtOnce: profiles,

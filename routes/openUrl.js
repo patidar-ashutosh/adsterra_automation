@@ -88,24 +88,24 @@ router.post('/', async (req, res) => {
 			});
 		}
 
-		if (pageTimeout < 10 || pageTimeout > 120) {
+		if (pageTimeout < 30 || pageTimeout > 120) {
 			return res.status(400).json({
 				success: false,
-				error: 'timeout must be between 10 and 120 seconds'
+				error: 'timeout must be between 30 and 120 seconds'
 			});
 		}
 
-		if (minWait < 10 || minWait > 120) {
+		if (minWait < 30 || minWait > 200) {
 			return res.status(400).json({
 				success: false,
-				error: 'minWaitTime must be between 10 and 120 seconds'
+				error: 'minWaitTime must be between 30 and 200 seconds'
 			});
 		}
 
-		if (maxWait < 10 || maxWait > 120) {
+		if (maxWait < 30 || maxWait > 230) {
 			return res.status(400).json({
 				success: false,
-				error: 'maxWaitTime must be between 10 and 120 seconds'
+				error: 'maxWaitTime must be between 30 and 230 seconds'
 			});
 		}
 

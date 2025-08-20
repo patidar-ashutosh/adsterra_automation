@@ -882,6 +882,19 @@
 				font-size: 13px;
 				font-weight: 600;
 			}
+
+			/* Disabled input styling */
+			input:disabled {
+				background: rgba(255, 255, 255, 0.05) !important;
+				color: rgba(255, 255, 255, 0.5) !important;
+				cursor: not-allowed;
+				border-color: rgba(255, 255, 255, 0.1) !important;
+			}
+
+			input:disabled:focus {
+				border-color: rgba(255, 255, 255, 0.1) !important;
+				box-shadow: none !important;
+			}
 		</style>
 	</head>
 	<body>
@@ -933,22 +946,6 @@
 						required
 					/>
 
-					<!-- Combined URLs Preview -->
-					<label for="combinedURLs">Combined URLs Preview:</label>
-					<textarea
-						id="combinedURLs"
-						name="combinedURLs"
-						disabled
-						style="
-							width: 100%;
-							font-family: monospace;
-							resize: vertical;
-							min-height: 120px;
-							max-height: 200px;
-							overflow: auto;
-						"
-					></textarea>
-
 					<label for="browser">Browser:</label>
 					<select name="browser" id="browser">
 						<option value="random">Random</option>
@@ -988,9 +985,9 @@
 						type="number"
 						name="timeout"
 						id="timeout"
-						min="10"
+						min="30"
 						max="120"
-						value="30"
+						value="45"
 						required
 					/>
 					<small
@@ -1000,7 +997,7 @@
 							font-size: 15px;
 							font-weight: bold;
 						"
-						>Recommended: 30 seconds. Increase for slow websites, decrease for fast
+						>Recommended: 45 seconds. Increase for slow websites, decrease for fast
 						ones.</small
 					>
 
@@ -1009,8 +1006,8 @@
 						type="number"
 						name="minWaitTime"
 						id="minWaitTime"
-						min="10"
-						max="120"
+						min="30"
+						max="200"
 						value="45"
 						required
 					/>
@@ -1030,10 +1027,11 @@
 						type="number"
 						name="maxWaitTime"
 						id="maxWaitTime"
-						min="10"
-						max="120"
+						min="30"
+						max="230"
 						value="55"
 						required
+						disabled
 					/>
 					<small
 						style="
@@ -1042,8 +1040,8 @@
 							font-size: 15px;
 							font-weight: bold;
 						"
-						>Recommended: 55 seconds. This is the maximum time each profile will stay on
-						the website.</small
+						>This will be enabled after you set the minimum wait time. Must be at least
+						10 seconds more than minimum.</small
 					>
 
 					<!-- Total Profiles Summary -->
@@ -1507,6 +1505,26 @@
 				}
 			}
 
+			// Function to validate proxy URL format
+			function isValidProxyURL(string) {
+				if (!string.trim()) return false;
+
+				// Check if it's a valid URL or has the right format for proxy services
+				try {
+					new URL(string);
+					return true;
+				} catch (_) {
+					// If not a valid URL, check if it looks like a proxy service endpoint
+					// Many proxy services have endpoints like: http://service.com/proxy?url=
+					return (
+						string.includes('http') &&
+						(string.includes('url=') ||
+							string.includes('&url=') ||
+							string.endsWith('='))
+					);
+				}
+			}
+
 			// Function to validate all URLs before submission
 			function validateAllURLs() {
 				const urlInputs = document.querySelectorAll('.blog-url-input');
@@ -1523,6 +1541,20 @@
 				});
 
 				return invalidUrls;
+			}
+
+			// Function to validate proxy URL
+			function validateProxyURL() {
+				const proxyInput = document.getElementById('ProxyURL');
+				const proxyURL = proxyInput.value.trim();
+
+				if (proxyURL && !isValidProxyURL(proxyURL)) {
+					proxyInput.classList.add('invalid-url');
+					return false;
+				} else {
+					proxyInput.classList.remove('invalid-url');
+					return true;
+				}
 			}
 
 			// Function to add URL with validation
@@ -1550,7 +1582,6 @@
 
 				// Show remove buttons for all URLs when there are more than 1
 				updateRemoveButtons();
-				updateCombinedURLs();
 				updateTotalProfilesSummary();
 
 				// Update profile URL distribution if profiles are already created
@@ -1576,6 +1607,9 @@
 						this.classList.remove('invalid-url', 'valid-url');
 					}
 				});
+
+				// Update all placeholder numbers
+				updateUrlPlaceholders();
 			}
 
 			function removeUrl(button) {
@@ -1584,13 +1618,23 @@
 
 				// Update remove buttons visibility
 				updateRemoveButtons();
-				updateCombinedURLs();
 				updateTotalProfilesSummary();
 
 				// Update profile URL distribution if profiles are already created
 				if (currentProfilesCount > 0) {
 					updateProfileUrlDistribution(currentProfilesCount);
 				}
+
+				// Update all placeholder numbers
+				updateUrlPlaceholders();
+			}
+
+			// Function to update all URL placeholder numbers
+			function updateUrlPlaceholders() {
+				const urlInputs = document.querySelectorAll('.blog-url-input');
+				urlInputs.forEach((input, index) => {
+					input.placeholder = `Enter blog URL ${index + 1}`;
+				});
 			}
 
 			function updateRemoveButtons() {
@@ -1601,29 +1645,6 @@
 				removeButtons.forEach((button) => {
 					button.style.display = urlGroups.length > 1 ? 'flex' : 'none';
 				});
-			}
-
-			function updateCombinedURLs() {
-				const proxyURL = document.getElementById('ProxyURL').value;
-				const urlInputs = document.querySelectorAll('.blog-url-input');
-				const combinedURLsTextarea = document.getElementById('combinedURLs');
-
-				let combinedText = '';
-				urlInputs.forEach((input, index) => {
-					if (input.value.trim()) {
-						const url = input.value.trim();
-						// Show both the original URL and the combined URL for clarity
-						combinedText += `URL ${index + 1}:\n`;
-						combinedText += `  Original: ${url}\n`;
-						if (proxyURL && proxyURL.trim()) {
-							const combinedURL = proxyURL + encodeURIComponent(url);
-							combinedText += `  Combined: ${combinedURL}\n`;
-						}
-						combinedText += '\n';
-					}
-				});
-
-				combinedURLsTextarea.value = combinedText.trim();
 			}
 
 			function updateTotalProfilesSummary() {
@@ -1639,6 +1660,67 @@
 				document.getElementById('profilesPerUrl').textContent = profilesPerUrl;
 				document.getElementById('totalProfiles').textContent = totalProfiles;
 				document.getElementById('totalWindows').textContent = totalWindows;
+			}
+
+			// Function to handle wait time logic
+			function handleWaitTimeLogic() {
+				const minWaitInput = document.getElementById('minWaitTime');
+				const maxWaitInput = document.getElementById('maxWaitTime');
+				const minWaitValue = parseInt(minWaitInput.value) || 0;
+
+				if (minWaitValue >= 30) {
+					// Enable max wait time input
+					maxWaitInput.disabled = false;
+
+					// Set max wait time to min + 10, but not exceeding 230
+					const maxWaitValue = Math.min(minWaitValue + 10, 230);
+					maxWaitInput.value = maxWaitValue;
+					maxWaitInput.min = minWaitValue + 10;
+
+					// Update the help text
+					const maxWaitHelp = maxWaitInput.nextElementSibling;
+					if (maxWaitHelp) {
+						maxWaitHelp.textContent = `Must be at least 10 seconds more than minimum (${minWaitValue}s). Current: ${maxWaitValue}s`;
+					}
+				} else {
+					// Disable max wait time input
+					maxWaitInput.disabled = true;
+					maxWaitInput.value = '';
+
+					// Update the help text
+					const maxWaitHelp = maxWaitInput.nextElementSibling;
+					if (maxWaitHelp) {
+						maxWaitHelp.textContent =
+							'This will be enabled after you set the minimum wait time. Must be at least 10 seconds more than minimum.';
+					}
+				}
+			}
+
+			// Function to validate wait time values
+			function validateWaitTimes() {
+				const minWaitInput = document.getElementById('minWaitTime');
+				const maxWaitInput = document.getElementById('maxWaitTime');
+				const minWaitValue = parseInt(minWaitInput.value) || 0;
+				const maxWaitValue = parseInt(maxWaitInput.value) || 0;
+
+				if (minWaitValue < 30) {
+					alert('Minimum wait time must be at least 30 seconds');
+					return false;
+				}
+
+				if (maxWaitValue > 0 && maxWaitValue <= minWaitValue) {
+					alert(
+						'Maximum wait time must be at least 10 seconds more than minimum wait time'
+					);
+					return false;
+				}
+
+				if (maxWaitValue > 230) {
+					alert('Maximum wait time cannot exceed 230 seconds');
+					return false;
+				}
+
+				return true;
 			}
 
 			// Event listeners for multiple URLs
@@ -1666,8 +1748,16 @@
 
 			// Update combined URLs when any URL input changes
 			document.addEventListener('input', function (e) {
-				if (e.target.classList.contains('blog-url-input') || e.target.id === 'ProxyURL') {
-					updateCombinedURLs();
+				if (e.target.classList.contains('blog-url-input')) {
+					updateTotalProfilesSummary();
+
+					// Update profile URL distribution if profiles are already created
+					if (currentProfilesCount > 0) {
+						updateProfileUrlDistribution(currentProfilesCount);
+					}
+				}
+				if (e.target.id === 'ProxyURL') {
+					validateProxyURL();
 				}
 				if (e.target.id === 'profilesAtOnce' || e.target.id === 'openCount') {
 					updateTotalProfilesSummary();
@@ -1677,10 +1767,29 @@
 						updateProfileUrlDistribution(currentProfilesCount);
 					}
 				}
+				if (e.target.id === 'minWaitTime') {
+					handleWaitTimeLogic();
+				}
+				if (e.target.id === 'maxWaitTime') {
+					// Validate that max wait time is appropriate
+					const minWaitValue =
+						parseInt(document.getElementById('minWaitTime').value) || 0;
+					const maxWaitValue = parseInt(e.target.value) || 0;
+
+					if (maxWaitValue > 0 && maxWaitValue <= minWaitValue) {
+						alert(
+							'Maximum wait time must be at least 10 seconds more than minimum wait time'
+						);
+						e.target.value = minWaitValue + 10;
+					}
+				}
 			});
 
 			// Initialize the summary
 			updateTotalProfilesSummary();
+
+			// Initialize wait time logic
+			handleWaitTimeLogic();
 
 			// Track current cycle for UI updates
 			let currentCycle = 1; // Initialize to 1 to match backend
@@ -1816,6 +1925,17 @@
 						.map((item) => `${item.index}. ${item.url}`)
 						.join('\n')}`;
 					alert(errorMessage);
+					return;
+				}
+
+				// Validate proxy URL
+				if (!validateProxyURL()) {
+					alert('Please enter a valid Proxy URL');
+					return;
+				}
+
+				// Validate wait times
+				if (!validateWaitTimes()) {
 					return;
 				}
 

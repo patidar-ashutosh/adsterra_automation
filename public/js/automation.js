@@ -19,12 +19,16 @@ async function checkStatus() {
 		const data = await response.json();
 
 		if (data.status === 'completed') {
+			// Update status and set automation state
 			statusDiv.innerText = `Status: Automation completed ✅ (${data.completedWindows}/${
 				data.totalWindows
 			} profiles completed, ${data.successWindows || 0} successful, ${
 				data.failedWindows || 0
 			} failed across all cycles)`;
 			setAutomationState(false);
+
+			// Continue with normal status checking
+			setTimeout(checkStatus, 500);
 		} else if (data.activeWindows > 0) {
 			// Create status with only active window details
 			let statusText = `Running: ${data.activeWindows} profiles`;
@@ -57,6 +61,16 @@ async function checkStatus() {
 		} else {
 			statusDiv.innerText = 'Status: Preparing automation cycles...';
 			setAutomationState(true);
+
+			// Update progress values even when preparing for next cycle
+			if (data.completedWindows !== undefined && data.totalWindows !== undefined) {
+				progressFill.style.width = `${data.progress || 0}%`;
+				progressText.textContent = `Progress: ${data.progress || 0}%`;
+				cycleText.textContent = `Current Cycle: ${data.currentCycle || 1}`;
+				completedText.textContent = `Completed: ${data.completedWindows}/${data.totalWindows}`;
+				successText.textContent = `Success: ${data.successWindows || 0}`;
+				failedText.textContent = `Failed: ${data.failedWindows || 0}`;
+			}
 		}
 
 		setTimeout(checkStatus, 500);

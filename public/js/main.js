@@ -28,7 +28,7 @@ function initializeApp() {
 	// Initialize automation
 	initializeAutomation();
 
-	console.log('🚀 Website Automation Package initialized successfully!');
+	console.log('🚀 Website Automation initialized successfully!');
 }
 
 // Wait for DOM to be fully loaded

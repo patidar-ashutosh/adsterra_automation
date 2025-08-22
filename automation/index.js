@@ -55,7 +55,8 @@ async function processWindow(
 	timeout = 30,
 	urlIndex = 1,
 	profileNum = 1,
-	originalUrl = ''
+	originalUrl = '',
+	headless
 ) {
 	let browserInstance = null;
 	let context = null;
@@ -109,7 +110,7 @@ async function processWindow(
 			return;
 		}
 
-		browserInstance = await browserChoice.launcher.launch({ headless: false });
+		browserInstance = await browserChoice.launcher.launch({ headless: headless });
 
 		// Check if stop was requested after browser launch
 		if (shouldStop) {
@@ -431,8 +432,12 @@ async function runAutomation(config) {
 		profilesAtOnce = 1,
 		timeout = 30,
 		minWaitTime = 45,
-		maxWaitTime = 55
+		maxWaitTime = 55,
+		headless
 	} = config;
+
+	// Set default headless value only if not provided (backward compatibility)
+	const headlessMode = headless !== undefined ? headless : false;
 
 	// Handle both single URL (backward compatibility) and multiple URLs
 	let targetUrls = urls || [];
@@ -521,7 +526,8 @@ async function runAutomation(config) {
 						timeout,
 						urlIndex + 1,
 						profileNum,
-						originalUrl
+						originalUrl,
+						headlessMode // Pass the determined headlessMode
 					)
 				);
 

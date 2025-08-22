@@ -12,7 +12,8 @@ router.post('/', async (req, res) => {
 			profilesAtOnce,
 			timeout,
 			minWaitTime,
-			maxWaitTime
+			maxWaitTime,
+			headless
 		} = req.body;
 
 		// Handle website URLs
@@ -134,7 +135,8 @@ router.post('/', async (req, res) => {
 			profilesAtOnce: profiles,
 			timeout: pageTimeout,
 			minWaitTime: minWait,
-			maxWaitTime: maxWait
+			maxWaitTime: maxWait,
+			headless: headless !== undefined ? headless : false
 		}).catch((err) => {
 			console.error('Automation error:', err);
 		});

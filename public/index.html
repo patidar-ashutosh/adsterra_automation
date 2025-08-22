@@ -90,72 +90,113 @@
 							</div>
 						</div>
 					</div>
-					<div class="toolbar-row">
-						<div class="field">
-							<label>Browser</label>
-							<select id="browser">
-								<option value="random">Random</option>
-								<option value="chromium">Chromium</option>
-								<option value="firefox">Firefox</option>
-								<option value="webkit">WebKit</option>
-							</select>
-						</div>
-						<div class="field">
-							<label>Profiles per Website</label>
-							<input id="profilesAtOnce" type="number" min="1" max="10" value="3" />
-						</div>
-						<div class="field">
-							<label>Cycles</label>
-							<input id="openCount" type="number" min="1" max="50" value="3" />
-						</div>
-					</div>
 				</header>
 
-				<!-- Automation Summary Section - Outside Panels -->
-				<section class="automation-summary-section">
-					<div class="card glass">
-						<h3 class="card-title">Automation Configuration</h3>
-						<form id="automationForm" class="automation-form">
-							<div class="form-grid">
-								<div class="field">
-									<label>Website Loading Timeout (seconds)</label>
-									<input
-										id="timeout"
-										type="number"
-										min="30"
-										max="300"
-										value="45"
-									/>
-									<small class="help-text">Recommended: 45s</small>
+				<!-- Automation Configuration Section -->
+				<section class="automation-config-section">
+					<form id="automationForm" class="automation-form">
+						<div class="card glass">
+							<h3 class="card-title">Automation Configuration</h3>
+							<div class="config-grid">
+								<!-- First div: Browser, Profiles, Cycles -->
+								<div class="config-group">
+									<h4 class="config-group-title">Browser & Profile Settings</h4>
+									<div class="config-fields">
+										<div class="field">
+											<label>Browser</label>
+											<select id="browser">
+												<option value="random">Random</option>
+												<option value="chromium">Chromium</option>
+												<option value="firefox">Firefox</option>
+												<option value="webkit">WebKit</option>
+											</select>
+										</div>
+										<div class="field">
+											<label>Profiles per Website</label>
+											<input
+												id="profilesAtOnce"
+												type="number"
+												min="1"
+												max="10"
+												value="3"
+											/>
+										</div>
+										<div class="field">
+											<label>Cycles</label>
+											<input
+												id="openCount"
+												type="number"
+												min="1"
+												max="50"
+												value="3"
+											/>
+										</div>
+									</div>
 								</div>
-								<div class="field">
-									<label>Minimum Session Duration (seconds)</label>
-									<input
-										id="minWaitTime"
-										type="number"
-										min="30"
-										max="200"
-										value="45"
-									/>
-									<small class="help-text">Recommended: 45s</small>
-								</div>
-								<div class="field">
-									<label>Maximum Session Duration (seconds)</label>
-									<input
-										id="maxWaitTime"
-										type="number"
-										min="30"
-										max="230"
-										value="55"
-										disabled
-									/>
-									<small class="help-text">Auto-set to min + 10s</small>
+
+								<!-- Second div: Timeout and Session Duration -->
+								<div class="config-group">
+									<h4 class="config-group-title">Timing & Performance</h4>
+									<div class="config-fields">
+										<div class="field">
+											<label>Website Loading Timeout (seconds)</label>
+											<input
+												id="timeout"
+												type="number"
+												min="30"
+												max="300"
+												value="45"
+											/>
+											<small class="help-text">Recommended: 45s</small>
+										</div>
+										<div class="field">
+											<label>Minimum Session Duration (seconds)</label>
+											<input
+												id="minWaitTime"
+												type="number"
+												min="30"
+												max="200"
+												value="45"
+											/>
+											<small class="help-text">Recommended: 45s</small>
+										</div>
+										<div class="field">
+											<label>Maximum Session Duration (seconds)</label>
+											<input
+												id="maxWaitTime"
+												type="number"
+												min="30"
+												max="230"
+												value="55"
+												disabled
+											/>
+											<small class="help-text">Auto-set to min + 10s</small>
+										</div>
+									</div>
 								</div>
 							</div>
-						</form>
-					</div>
+						</div>
 
-					<!-- Automation Summary Card -->
+						<!-- Browser Visibility Section -->
+						<div class="card glass">
+							<h3 class="card-title">Browser Window Visibility</h3>
+							<div class="visibility-section">
+								<div class="checkbox-field">
+									<input type="checkbox" id="showBrowserWindows" checked />
+									<label for="showBrowserWindows" class="checkbox-label">
+										Show browser windows during automation
+									</label>
+								</div>
+								<small class="help-text">
+									When checked: You can see and monitor browser windows<br />
+									When unchecked: Browser runs in background (faster, less
+									resource usage)
+								</small>
+							</div>
+						</div>
+					</form>
+
+					<!-- Automation Summary Section -->
 					<div class="card glass">
 						<h3 class="card-title">Automation Summary</h3>
 						<div class="summary-grid">
@@ -178,7 +219,7 @@
 						</div>
 					</div>
 
-					<!-- Start Button Card - Full Height -->
+					<!-- Start Button Section -->
 					<div class="card glass start-button-card">
 						<div class="start-button-content">
 							<h3 class="card-title">Ready to Start?</h3>

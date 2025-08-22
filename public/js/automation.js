@@ -20,19 +20,15 @@ async function checkStatus() {
 		// Check for cycle change
 		const newCycle = data.currentCycle || 1;
 		if (newCycle !== currentCycle) {
-			console.log(`🔄 Cycle change detected: ${currentCycle} → ${newCycle}`);
-
 			// Show cycle completion message for the previous cycle (only if it's not the first cycle)
 			if (currentCycle > 1 && typeof showCycleCompletionMessage === 'function') {
 				const completedProfiles = data.completedWindows || 0;
 				const totalProfiles = data.totalWindows || 0;
-				console.log(`✅ Showing completion message for cycle ${currentCycle}`);
 				showCycleCompletionMessage(currentCycle, completedProfiles, totalProfiles);
 			}
 
 			// Show preparation message for new cycle (only if it's not the first cycle)
 			if (newCycle > 1 && typeof showCyclePreparationMessage === 'function') {
-				console.log(`⏳ Showing preparation message for cycle ${newCycle}`);
 				showCyclePreparationMessage(newCycle);
 			}
 
@@ -42,7 +38,6 @@ async function checkStatus() {
 		// Check if we're transitioning from waiting to running/preparing
 		// This means the 5-second delay has ended and the cycle is starting
 		if (data.status === 'running' || data.status === 'preparing') {
-			console.log(`🚀 Cycle starting - hiding preparation message`);
 			// Hide any preparation messages immediately when cycle starts
 			if (typeof hideCyclePreparationMessage === 'function') {
 				hideCyclePreparationMessage();
@@ -132,14 +127,13 @@ async function checkStatus() {
 
 			// Wait 5 seconds then redirect back to automation panel (increased from 3s to 5s)
 			setTimeout(() => {
-				console.log('🔄 Redirecting to automation panel after completion');
 				// Switch back to automation panel
 				document.querySelectorAll('.panel').forEach((p) => p.classList.remove('show'));
 				document.getElementById('panel-automation').classList.add('show');
 
 				// Show automation summary section
 				const automationSummarySection = document.querySelector(
-					'.automation-summary-section'
+					'.automation-config-section'
 				);
 				if (automationSummarySection) {
 					automationSummarySection.style.display = 'flex';
@@ -273,21 +267,15 @@ async function checkStatus() {
 // Function to handle form submission
 async function handleFormSubmission(e) {
 	e.preventDefault();
-	console.log('🚀 Form submission started');
-	console.log('📝 Event target:', e.target);
-	console.log('📝 Event target type:', typeof e.target);
-	console.log('📝 Event target is form:', e.target instanceof HTMLFormElement);
 
 	// Use comprehensive validation
 	if (!validateForm()) {
-		console.log('❌ Form validation failed');
 		return;
 	}
 
 	// Get validated URLs from validation
 	const urlValidation = validateAllURLs();
 	const urls = urlValidation.validUrls;
-	console.log('🌐 Validated URLs:', urls);
 
 	// Validate that we have at least one URL
 	if (urls.length === 0) {
@@ -302,6 +290,7 @@ async function handleFormSubmission(e) {
 	const timeout = document.getElementById('timeout')?.value || '45';
 	const minWaitTime = document.getElementById('minWaitTime')?.value || '45';
 	const maxWaitTime = document.getElementById('maxWaitTime')?.value || '55';
+	const showBrowserWindows = document.getElementById('showBrowserWindows')?.checked ?? true;
 
 	// Create payload with actual values
 	const actualPayload = {
@@ -310,7 +299,8 @@ async function handleFormSubmission(e) {
 		openCount,
 		timeout,
 		minWaitTime,
-		maxWaitTime
+		maxWaitTime,
+		headless: !showBrowserWindows // Convert to headless boolean (inverted)
 	};
 
 	console.log('📋 Actual payload:', actualPayload);
@@ -331,6 +321,10 @@ async function handleFormSubmission(e) {
 		<div class="data-item">
 			<span class="data-label">Browser:</span>
 			<span class="data-value">${browser}</span>
+		</div>
+		<div class="data-item">
+			<span class="data-label">Browser Visibility:</span>
+			<span class="data-value">${showBrowserWindows ? 'Visible' : 'Headless'}</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Cycles:</span>
@@ -356,11 +350,8 @@ async function handleFormSubmission(e) {
 		}</p>
 	`;
 
-	console.log('�� Attempting to show popup...');
-
 	// Use window.showPopup if available, otherwise fall back to alert
 	if (typeof window.showPopup === 'function') {
-		console.log('✅ Using window.showPopup');
 		window.showPopup('🚀 Start Website Automation', startContent, 'Start Automation');
 
 		// Wait a bit for the popup to be created, then set up the event handler
@@ -368,41 +359,30 @@ async function handleFormSubmission(e) {
 			setupPopupConfirmation(urls, actualPayload);
 		}, 100);
 	} else {
-		console.log('⚠️ window.showPopup not available, using fallback');
 		// Fallback to simple confirmation
 		if (confirm('Start automation with these settings?')) {
-			console.log('✅ Confirmation accepted, starting automation...');
 			startAutomation(urls, actualPayload);
-		} else {
-			console.log('❌ Confirmation rejected');
 		}
 	}
 }
 
 // Function to set up popup confirmation
 function setupPopupConfirmation(urls, payload) {
-	console.log('🔧 Setting up popup confirmation...');
-
 	const popupConfirm = document.getElementById('popupConfirm');
 	if (popupConfirm) {
-		console.log('✅ Found popupConfirm button, setting up event handler');
-
 		// Remove any existing event listeners
 		const newButton = popupConfirm.cloneNode(true);
 		popupConfirm.parentNode.replaceChild(newButton, popupConfirm);
 
 		// Set up new event handler
 		newButton.onclick = async () => {
-			console.log('✅ Popup confirm clicked, starting automation...');
 			if (typeof window.hidePopup === 'function') {
 				window.hidePopup();
 			}
 			await startAutomation(urls, payload);
 		};
 	} else {
-		console.error('❌ popupConfirm button not found!');
 		// If popup didn't work, start directly
-		console.log('🚀 Starting automation directly due to popup failure');
 		startAutomation(urls, payload);
 	}
 }
@@ -427,11 +407,8 @@ function resetLogsStatusValues() {
 
 // Separate function to start automation
 async function startAutomation(urls, payload) {
-	console.log('🚀 startAutomation function called with:', { urls, payload });
-
 	// Get total profiles count and create log areas
 	const totalProfiles = urls.length * parseInt(payload.profilesAtOnce);
-	console.log(`👥 Total profiles to create: ${totalProfiles}`);
 
 	// Reset logs status values to clear any old automation data
 	resetLogsStatusValues();
@@ -443,18 +420,13 @@ async function startAutomation(urls, payload) {
 	completionPopupShown = false;
 
 	try {
-		console.log('📝 Creating profile logs...');
 		createProfileLogs(totalProfiles);
-		console.log('✅ Profile logs created successfully');
 	} catch (error) {
 		console.error('❌ Error creating profile logs:', error);
 	}
 
 	// Immediately set automation state to prevent button flickering
-	console.log('🔄 Setting automation state to running...');
 	setAutomationState(true);
-
-	console.log('✅ Status updated to "Starting automation..."');
 
 	try {
 		// Prepare payload with URLs array
@@ -462,7 +434,6 @@ async function startAutomation(urls, payload) {
 			...payload,
 			websiteURLs: urls
 		};
-		console.log('📤 Sending automation payload to backend:', automationPayload);
 
 		const res = await fetch('/open-url', {
 			method: 'POST',
@@ -470,24 +441,16 @@ async function startAutomation(urls, payload) {
 			body: JSON.stringify(automationPayload)
 		});
 
-		console.log('📥 Backend response received:', res.status, res.statusText);
 		const result = await res.json();
-		console.log('📋 Backend result:', result);
 
 		if (result.success) {
-			console.log('✅ Backend automation started successfully');
 			// Clear any existing logs and add initial messages
 			try {
-				console.log('🧹 Clearing existing profile logs...');
 				clearAllProfileLogs();
-				console.log('✅ Profile logs cleared');
-
-				console.log('📝 Adding initial log messages...');
 				for (let i = 1; i <= totalProfiles; i++) {
 					appendProfileLog(i, `🚀 Starting Profile ${i}`);
 					appendProfileLog(i, `⏳ Waiting for automation to start...`);
 				}
-				console.log('✅ Initial log messages added');
 			} catch (error) {
 				console.error('❌ Error updating profile logs:', error);
 			}
@@ -587,9 +550,9 @@ function setAutomationState(isRunning) {
 		}
 
 		// Hide the automation summary section when automation is running
-		const automationSummarySection = document.querySelector('.automation-summary-section');
-		if (automationSummarySection) {
-			automationSummarySection.style.display = 'none';
+		const automationConfigSection = document.querySelector('.automation-config-section');
+		if (automationConfigSection) {
+			automationConfigSection.style.display = 'none';
 		}
 
 		// Hide the automation navigation link
@@ -622,9 +585,9 @@ function setAutomationState(isRunning) {
 		}
 
 		// Show the automation summary section when automation is stopped
-		const automationSummarySection = document.querySelector('.automation-summary-section');
-		if (automationSummarySection) {
-			automationSummarySection.style.display = 'flex';
+		const automationConfigSection = document.querySelector('.automation-config-section');
+		if (automationConfigSection) {
+			automationConfigSection.style.display = 'flex';
 		}
 
 		// Show the automation navigation link
@@ -652,15 +615,9 @@ function initializeAutomation() {
 	const startButton = document.getElementById('startBtn');
 	const logsStopButton = document.getElementById('logsStopBtn');
 
-	console.log('🔧 Initializing automation controls...');
-	console.log('📝 Form found:', !!form);
-	console.log('🚀 Start button found:', !!startButton);
-	console.log('🛑 Logs stop button found:', !!logsStopButton);
-
 	// Form submission handler
 	if (form) {
 		form.addEventListener('submit', handleFormSubmission);
-		console.log('✅ Form submission handler attached');
 	} else {
 		console.error('❌ Form not found!');
 	}
@@ -668,12 +625,10 @@ function initializeAutomation() {
 	// Start button click handler (since it's outside the form)
 	if (startButton) {
 		startButton.addEventListener('click', async (e) => {
-			console.log('🚀 Start button clicked!');
 			e.preventDefault();
 
 			// Manually trigger form submission by calling handleFormSubmission directly
 			if (form) {
-				console.log('📝 Manually triggering form submission...');
 				// Create a fake event object with the form as target
 				const fakeEvent = {
 					preventDefault: () => {},
@@ -684,7 +639,6 @@ function initializeAutomation() {
 				console.error('❌ Form not found for manual submission!');
 			}
 		});
-		console.log('✅ Start button click handler attached');
 	} else {
 		console.error('❌ Start button not found!');
 	}
@@ -692,7 +646,6 @@ function initializeAutomation() {
 	// Logs stop button handler
 	if (logsStopButton) {
 		logsStopButton.addEventListener('click', handleStopAutomation);
-		console.log('✅ Logs stop button click handler attached');
 	} else {
 		console.error('❌ Logs stop button not found!');
 	}

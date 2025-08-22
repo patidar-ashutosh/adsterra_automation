@@ -1,210 +1,191 @@
-# 🌐 Website Automation Package
+# 🚀 GhostOps Website Automation Package
 
-A powerful, universal website automation package built with Node.js and Playwright. This package provides advanced web automation capabilities with human-like behavior simulation, multi-website support, and sophisticated anti-detection features.
+A modern, cyberpunk-styled website automation system built with Node.js, Express, and Playwright. Features a sleek, matrix-inspired interface with real-time automation control.
 
 ## ✨ Features
 
--   **🌐 Multi-Website Support**: Automate multiple websites simultaneously
--   **🤖 Human-Like Behavior**: Advanced simulation of real user interactions
--   **🛡️ Anti-Detection**: Browser fingerprinting and stealth techniques
--   **📊 Real-Time Monitoring**: Live progress tracking and detailed logging
--   **⚡ High Performance**: Efficient profile management and cycle handling
--   **🔧 Flexible Configuration**: Customizable timeouts, session durations, and browser selection
+### 🎨 **Modern GhostOps UI**
+
+-   **Cyberpunk Design**: Dark theme with neon accents and matrix rain effects
+-   **Responsive Layout**: Sidebar navigation with glass-morphism effects
+-   **Theme Engine**: 5 built-in themes with auto-rotation
+-   **Real-time Updates**: Live console, progress ring, and status monitoring
+
+### 🤖 **Automation Capabilities**
+
+-   **Multi-URL Support**: Automate multiple websites simultaneously
+-   **Browser Profiles**: Multiple browser instances per website
+-   **Cycle Management**: Configurable automation cycles
+-   **Real-time Logging**: Live profile status and console output
+-   **Smart Timing**: Configurable session durations and timeouts
+
+### 🛠️ **Technical Features**
+
+-   **Playwright Integration**: Chromium, Firefox, and WebKit support
+-   **Server-Sent Events**: Real-time communication
+-   **Browser Fingerprinting**: Anti-detection capabilities
+-   **Human Behavior Simulation**: Realistic user interactions
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
--   Node.js 16+
+-   Node.js 18+
 -   npm or yarn
 
 ### Installation
 
 ```bash
 git clone <repository-url>
-cd website-automation-package
+cd adsterra_automation
 npm install
 npm start
 ```
 
-### Usage
+### Access the UI
 
-1. Open your browser to `http://localhost:3000`
-2. Configure your automation settings:
-    - Add website URLs to automate
-    - Configure browser settings
-    - Set automation cycles and profiles
-3. Click "Start Automation" to begin
+Open your browser and navigate to: `http://localhost:3000`
 
-## 📋 Configuration Options
+## 🎯 UI Overview
 
-### Website URLs
+### **Dashboard Panel**
 
--   **Multiple URLs**: Add multiple websites to automate simultaneously
--   **Dynamic Management**: Add/remove websites with real-time validation
--   **Smart Distribution**: Each website gets its own set of profiles
+-   **Live Console**: Real-time automation logs
+-   **Automation Status**: Current progress and cycle information
+-   **System Info**: Node.js and Playwright versions, latency
 
-### Automation Settings
+### **Automation Panel**
 
--   **Cycles**: Number of times to run the complete automation
--   **Profiles per Website**: Number of concurrent profiles per website
--   **Loading Timeout**: Maximum time to wait for website loading (30-120s)
+-   **Configuration**: Timeout, session duration, and other settings
+-   **Summary**: Total websites, profiles, and sessions overview
+
+### **Logs Panel**
+
+-   **Profile Logs**: Individual profile status and logs
+-   **Real-time Updates**: Live status changes and progress
+
+### **Settings Panel**
+
+-   **Server Configuration**: Connection settings and preferences
+-   **Theme Selection**: Choose from 5 built-in themes
+
+## 🎨 Theme System
+
+The UI includes 5 pre-built themes:
+
+1. **Aqua Neon** - Classic cyberpunk with cyan accents
+2. **Cyber Magenta** - Vibrant pink and purple
+3. **Lime Matrix** - Green terminal aesthetic
+4. **Violet Storm** - Deep purple and blue
+5. **Amber Pulse** - Warm orange and amber
+
+Themes auto-rotate every 12 seconds, or manually select using the theme dots in the sidebar.
+
+## 🔧 Configuration
+
+### **Basic Settings**
+
+-   **Target URLs**: Add multiple websites to automate
+-   **Browser**: Choose between Chromium, Firefox, or WebKit
+-   **Profiles per Website**: Number of concurrent browser instances
+-   **Cycles**: Total automation cycles to run
+
+### **Advanced Settings**
+
+-   **Loading Timeout**: Maximum time to wait for page load (30-300s)
 -   **Session Duration**: Min/max time profiles stay on websites (30-230s)
+-   **Smart Logic**: Max duration automatically adjusts based on min duration
 
-### Browser Configuration
+## 📊 Automation Workflow
 
--   **Random Selection**: Automatically choose between Chromium, Firefox, Webkit
--   **Manual Selection**: Choose specific browser for consistency
--   **Fingerprinting**: Advanced browser spoofing and anti-detection
+1. **Configure URLs**: Add target websites in the toolbar
+2. **Set Parameters**: Choose browser, profiles, and cycles
+3. **Review Summary**: Check total profiles and sessions
+4. **Start Automation**: Click "Start" to begin
+5. **Monitor Progress**: Watch real-time updates in the dashboard
+6. **View Results**: Check logs panel for detailed profile information
 
-## 🔧 Technical Architecture
+## 🎭 UI Features
 
-### Frontend
+### **Matrix Rain Effect**
 
--   **Vanilla JavaScript**: No framework dependencies
--   **Real-Time Updates**: Server-Sent Events (SSE) for live monitoring
--   **Responsive Design**: Modern UI with mobile-friendly layout
--   **Smart Validation**: Client-side validation with visual feedback
+-   Animated Japanese characters falling in the background
+-   Theme-aware colors that match the current accent
+-   Subtle opacity for non-intrusive visual appeal
 
-### Backend
+### **Glass Morphism**
 
--   **Express.js Server**: Fast, lightweight Node.js framework
--   **Playwright Integration**: Cross-browser automation engine
--   **Profile Management**: Efficient handling of multiple automation profiles
--   **Error Handling**: Robust error handling and graceful degradation
+-   Semi-transparent panels with backdrop blur
+-   Subtle borders and shadows
+-   Modern, depth-based design language
 
-### Automation Engine
+### **Responsive Design**
 
--   **Human Simulation**: Bezier curve mouse movements, natural scrolling
--   **Anti-Detection**: Canvas, WebGL, AudioContext, Navigator spoofing
--   **Session Management**: Intelligent profile lifecycle management
--   **Resource Optimization**: Efficient browser instance handling
+-   Mobile-friendly layout
+-   Collapsible sidebar on smaller screens
+-   Adaptive grid layouts
 
-## 📊 Multi-Website Workflow
+## 🔌 Integration
 
-### Profile Distribution
+### **Backend API**
 
-```
-Website 1 → Profiles 1, 2, 3...
-Website 2 → Profiles 4, 5, 6...
-Website 3 → Profiles 7, 8, 9...
-```
+-   `/open-url` - Start automation
+-   `/automation-status` - Get current status
+-   `/stop-automation` - Stop running automation
+-   `/log-stream` - Real-time log streaming
 
-### Cycle Management
+### **Frontend JavaScript**
 
--   **Parallel Execution**: All profiles run simultaneously within cycles
--   **Cycle Isolation**: Fresh start for each automation cycle
--   **Progress Tracking**: Real-time monitoring across all websites
+-   Modular architecture with separate files for UI, logs, automation, and validation
+-   Event-driven updates via Server-Sent Events
+-   Theme engine with CSS custom properties
 
-## 🛡️ Anti-Detection Features
+## 🚨 Troubleshooting
 
-### Browser Fingerprinting
+### **Common Issues**
 
--   **Screen Properties**: Dynamic resolution and color depth
--   **WebGL Spoofing**: Random WebGL vendor and renderer
--   **Canvas Fingerprinting**: Unique canvas signatures
--   **Audio Context**: Randomized audio fingerprinting
+1. **Server not starting**: Check Node.js version and port availability
+2. **UI not loading**: Verify all JavaScript files are accessible
+3. **Automation failing**: Check browser installation and permissions
 
-### Human Behavior
+### **Debug Mode**
 
--   **Mouse Movements**: Natural Bezier curve trajectories
--   **Scrolling Patterns**: Realistic scroll behavior simulation
--   **Timing Variations**: Random delays and human-like pauses
--   **Interaction Patterns**: Natural text selection and navigation
+-   Open browser console for detailed logs
+-   Check server console for backend errors
+-   Verify SSE connection status in the sidebar
 
-## 📈 Performance & Limits
+## 🎨 Customization
 
-### Resource Management
+### **Adding New Themes**
 
--   **Maximum Sessions**: 200 concurrent sessions limit
--   **Browser Instances**: Efficient Playwright browser management
--   **Memory Optimization**: Automatic cleanup and resource management
+1. Add theme object to `THEMES` array in `app.js`
+2. Define color variables (bg1, bg2, accent, text, muted)
+3. Theme will automatically appear in the theme rotator
 
-### Scalability
+### **Modifying Styles**
 
--   **Multi-Website**: Support for unlimited websites
--   **Profile Scaling**: Up to 10 profiles per website
--   **Cycle Flexibility**: 1-20 automation cycles
+-   CSS variables in `:root` for easy color changes
+-   Glass morphism effects in `.glass` class
+-   Animation keyframes for custom effects
 
-## 🔍 Use Cases
+## 📱 Browser Support
 
-### E-commerce
-
--   **Product Monitoring**: Track prices across multiple stores
--   **Inventory Checking**: Monitor stock availability
--   **Competitive Analysis**: Analyze competitor pricing strategies
-
-### Content Management
-
--   **Multi-Platform Publishing**: Post content to multiple websites
--   **Content Monitoring**: Track content changes across sites
--   **SEO Analysis**: Monitor search engine rankings
-
-### Testing & QA
-
--   **Cross-Browser Testing**: Test websites across different browsers
--   **Performance Monitoring**: Track website loading times
--   **User Experience Testing**: Simulate real user interactions
-
-### Research & Data Collection
-
--   **Market Research**: Gather data from multiple sources
--   **Price Comparison**: Monitor pricing across platforms
--   **Content Aggregation**: Collect information from various websites
-
-## 🚨 Important Notes
-
-### Performance Considerations
-
--   **Resource Usage**: Each profile consumes system resources
--   **Network Load**: Multiple concurrent connections to target websites
--   **Browser Memory**: Playwright instances require significant RAM
-
-### Best Practices
-
--   **Start Small**: Begin with fewer profiles and increase gradually
--   **Monitor Resources**: Watch system performance during automation
--   **Respect Limits**: Stay within recommended session limits
--   **Direct Connection**: Run automation directly from your IP address
-
-### Legal & Ethical
-
--   **Terms of Service**: Always respect website terms of service
--   **Rate Limiting**: Implement appropriate delays between requests
--   **Data Privacy**: Handle collected data responsibly
--   **Respectful Automation**: Avoid overwhelming target websites
-
-## 🔮 Future Enhancements
-
-### Planned Features
-
--   **Advanced Scheduling**: Time-based automation scheduling
--   **Data Export**: CSV/JSON export of automation results
--   **API Integration**: RESTful API for external control
--   **Plugin System**: Extensible automation capabilities
-
-### Community Contributions
-
--   **Custom Behaviors**: User-defined interaction patterns
--   **Template Library**: Pre-built automation templates
--   **Integration Examples**: Sample integrations with popular tools
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+-   **Modern Browsers**: Chrome 90+, Firefox 88+, Safari 14+
+-   **CSS Features**: CSS Grid, Flexbox, Backdrop Filter
+-   **JavaScript**: ES2020+ features with fallbacks
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📞 Support
+## 📄 License
 
-For support and questions:
-
--   Create an issue on GitHub
--   Check the documentation
--   Review existing issues for solutions
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**Built with ❤️ for the automation community**
+**Built with ❤️ using Node.js, Express, Playwright, and modern web technologies**

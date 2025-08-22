@@ -32,11 +32,7 @@ function connectToLogStream() {
 					currentCycle = data.cycle || 1;
 				}
 
-				// Update cycle display
-				const cycleTextElement = document.getElementById('cycleText');
-				if (cycleTextElement) {
-					cycleTextElement.textContent = `Current Cycle: ${data.cycle}`;
-				}
+				// Cycle display is now handled by logsStatusCard in automation.js
 			} else if (data.type === 'status_change' && data.profileIndex) {
 				// Handle real-time status updates
 				console.log(`📊 Status change: Profile ${data.profileIndex} -> ${data.status}`);
@@ -78,15 +74,54 @@ function disconnectFromLogStream() {
 
 // Function to create profile log areas for current cycle
 function createProfileLogsForCycle(profilesCount, cycle) {
-	const profileLogsGrid = document.getElementById('profileLogsGrid');
-	profileLogsGrid.innerHTML = '';
+	console.log(`🔄 Creating profile logs for ${profilesCount} profiles, cycle ${cycle}`);
+
+	const profileLogsContainer = document.getElementById('profileLogs');
+	if (!profileLogsContainer) {
+		console.error('❌ profileLogs container not found!');
+		return;
+	}
+
+	profileLogsContainer.innerHTML = '';
 	profileLogs.clear();
 	currentProfilesCount = profilesCount;
 	currentCycleProfiles = profilesCount;
 
+	// Hide any preparation messages when cycle starts
+	hideCyclePreparationMessage();
+
+	// Only show cycle start message for cycles after the first one
+	if (cycle > 1) {
+		// Add cycle transition message
+		const cycleMessage = document.createElement('div');
+		cycleMessage.className = 'cycle-transition-message';
+		cycleMessage.innerHTML = `
+			<div class="cycle-transition-content">
+				<div class="cycle-transition-icon">🔄</div>
+				<div class="cycle-transition-text">
+					<h4>Cycle ${cycle} Starting</h4>
+					<p>Preparing ${profilesCount} profiles for automation...</p>
+				</div>
+			</div>
+		`;
+		profileLogsContainer.appendChild(cycleMessage);
+
+		// Auto-remove cycle start message after 3 seconds
+		setTimeout(() => {
+			if (cycleMessage.parentNode) {
+				cycleMessage.remove();
+			}
+		}, 3000);
+	}
+
 	for (let i = 1; i <= profilesCount; i++) {
 		const logItem = document.createElement('div');
 		logItem.className = 'profile-log-item';
+		// Ensure logs are visible for new cycle with proper initial state
+		logItem.style.opacity = '1';
+		logItem.style.transform = 'translateY(0)';
+		logItem.style.pointerEvents = 'auto';
+		logItem.style.transition = 'all 0.5s ease';
 		logItem.innerHTML = `
 			<div class="profile-log-header">
 				<div class="profile-log-title">Profile ${i} <span class="profile-time" id="profileTime${i}"></span></div>
@@ -95,11 +130,137 @@ function createProfileLogsForCycle(profilesCount, cycle) {
 			<div class="profile-url-info" id="profileUrlInfo${i}">URL: Loading...</div>
 			<textarea class="profile-log-area" id="profileLog${i}" readonly></textarea>
 		`;
-		profileLogsGrid.appendChild(logItem);
+		profileLogsContainer.appendChild(logItem);
 
 		// Store reference to log area
-		profileLogs.set(i, document.getElementById(`profileLog${i}`));
+		const logArea = document.getElementById(`profileLog${i}`);
+		if (logArea) {
+			profileLogs.set(i, logArea);
+			console.log(`✅ Profile ${i} log area created and stored`);
+		} else {
+			console.error(`❌ Failed to find log area for profile ${i}`);
+		}
 	}
+
+	console.log(`✅ Created ${profilesCount} profile log areas`);
+	console.log(`📊 Profile logs Map size: ${profileLogs.size}`);
+}
+
+// Function to show cycle completion message
+function showCycleCompletionMessage(cycle, completedProfiles, totalProfiles) {
+	const profileLogsContainer = document.getElementById('profileLogs');
+	if (!profileLogsContainer) return;
+
+	// Create cycle completion message
+	const completionMessage = document.createElement('div');
+	completionMessage.className = 'cycle-completion-message';
+	completionMessage.innerHTML = `
+		<div class="cycle-completion-content">
+			<div class="cycle-completion-icon">✅</div>
+			<div class="cycle-completion-text">
+				<h4>Cycle ${cycle} Completed!</h4>
+				<p>${completedProfiles} out of ${totalProfiles} profiles completed successfully</p>
+			</div>
+		</div>
+	`;
+
+	// Insert at the top of the logs
+	profileLogsContainer.insertBefore(completionMessage, profileLogsContainer.firstChild);
+
+	// Auto-remove after 5 seconds
+	setTimeout(() => {
+		if (completionMessage.parentNode) {
+			completionMessage.remove();
+		}
+	}, 5000);
+}
+
+// Function to show cycle preparation message
+function showCyclePreparationMessage(nextCycle) {
+	const profileLogsContainer = document.getElementById('profileLogs');
+	if (!profileLogsContainer) return;
+
+	// Remove any existing preparation messages first
+	const existingPrepMessages = profileLogsContainer.querySelectorAll(
+		'.cycle-preparation-message'
+	);
+	existingPrepMessages.forEach((msg) => msg.remove());
+
+	// Create preparation message
+	const prepMessage = document.createElement('div');
+	prepMessage.className = 'cycle-preparation-message';
+	prepMessage.id = 'cyclePrepMessage';
+	prepMessage.innerHTML = `
+		<div class="cycle-preparation-content">
+			<div class="cycle-preparation-icon">⏳</div>
+			<div class="cycle-preparation-text">
+				<h4>Preparing Next Cycle</h4>
+				<p>Setting up automation for Cycle ${nextCycle}...</p>
+			</div>
+		</div>
+	`;
+
+	// Insert at the top of the logs
+	profileLogsContainer.insertBefore(prepMessage, profileLogsContainer.firstChild);
+
+	// Hide all profile logs to create clean slate for new cycle
+	// Use a more direct approach to ensure it works
+	hideAllProfileLogsDirect();
+
+	// Auto-remove after 6 seconds as a fallback (in case something goes wrong)
+	// But ideally it will be hidden programmatically when the cycle starts
+	setTimeout(() => {
+		if (prepMessage.parentNode) {
+			prepMessage.remove();
+		}
+	}, 6000);
+}
+
+// Function to hide all profile logs using direct DOM manipulation
+function hideAllProfileLogsDirect() {
+	console.log(`🙈 Hiding all profile logs for clean cycle transition`);
+
+	// Hide all profile log items using direct style manipulation
+	const profileLogItems = document.querySelectorAll('.profile-log-item');
+	profileLogItems.forEach((item, index) => {
+		item.style.opacity = '0';
+		item.style.transform = 'translateY(20px)';
+		item.style.pointerEvents = 'none';
+		console.log(`✅ Hidden profile log ${index + 1} using direct style`);
+	});
+}
+
+// Function to show all profile logs using direct DOM manipulation
+function showAllProfileLogsDirect() {
+	console.log(`👁️ Showing all profile logs for new cycle`);
+
+	// Show all profile log items using direct style manipulation
+	const profileLogItems = document.querySelectorAll('.profile-log-item');
+	profileLogItems.forEach((item, index) => {
+		item.style.opacity = '1';
+		item.style.transform = 'translateY(0)';
+		item.style.pointerEvents = 'auto';
+		console.log(`✅ Shown profile log ${index + 1} using direct style`);
+	});
+}
+
+// Function to hide cycle preparation message
+function hideCyclePreparationMessage() {
+	console.log(`🔧 hideCyclePreparationMessage called`);
+	const prepMessage = document.getElementById('cyclePrepMessage');
+	if (prepMessage && prepMessage.parentNode) {
+		console.log(`✅ Removing preparation message`);
+		prepMessage.remove();
+	} else {
+		console.log(`⚠️ No preparation message found to remove`);
+	}
+
+	// Small delay before showing logs for smooth transition
+	setTimeout(() => {
+		console.log(`⏰ Showing profile logs after delay`);
+		// Show all profile logs for the new cycle
+		showAllProfileLogsDirect();
+	}, 300); // 300ms delay for smooth transition
 }
 
 // Function to create profile log areas (for initial setup)
@@ -141,28 +302,46 @@ function updateProfileUrlDistribution(profilesCount) {
 
 // Function to append log to specific profile
 function appendProfileLog(profileIndex, message) {
+	console.log(`📝 Appending log to profile ${profileIndex}: ${message}`);
+
 	const logArea = profileLogs.get(profileIndex);
 	if (logArea) {
 		logArea.value += `${message}\n`;
 		logArea.scrollTop = logArea.scrollHeight;
+		console.log(`✅ Log appended to profile ${profileIndex}`);
+	} else {
+		console.error(`❌ Log area not found for profile ${profileIndex}`);
 	}
 }
 
 // Function to clear all profile logs
 function clearAllProfileLogs() {
-	profileLogs.forEach((logArea) => {
+	console.log(`🧹 Clearing all profile logs (${profileLogs.size} profiles)`);
+
+	profileLogs.forEach((logArea, index) => {
 		if (logArea) {
 			logArea.value = '';
+			console.log(`✅ Cleared logs for profile ${index}`);
+		} else {
+			console.error(`❌ Log area not found for profile ${index}`);
 		}
 	});
 
-	// Clear URL info as well
+	// Clear URL info for profiles that are not in final states
 	for (let i = 1; i <= currentProfilesCount; i++) {
 		const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
-		if (urlInfoElement) {
-			urlInfoElement.textContent = 'URL: Loading...';
+		const statusElement = document.getElementById(`profileStatus${i}`);
+
+		if (urlInfoElement && statusElement) {
+			const currentStatus = statusElement.textContent;
+			// Only reset URL info if profile is not in a final state
+			if (!['completed', 'success', 'failed', 'error'].includes(currentStatus)) {
+				urlInfoElement.textContent = 'URL: Loading...';
+			}
 		}
 	}
+
+	console.log(`✅ All profile logs cleared`);
 }
 
 // Function to update profile status
@@ -178,15 +357,23 @@ function updateProfileStatus(profileIndex, status, className) {
 function updateProfileTimes(activeWindowDetails) {
 	if (!activeWindowDetails || activeWindowDetails.length === 0) return;
 
-	// Clear all profile times first
+	// Clear all profile times first, but preserve URL info for completed profiles
 	for (let i = 1; i <= currentProfilesCount; i++) {
 		const timeElement = document.getElementById(`profileTime${i}`);
-		const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
+		const statusElement = document.getElementById(`profileStatus${i}`);
+
 		if (timeElement) {
 			timeElement.textContent = '';
 		}
-		if (urlInfoElement) {
-			urlInfoElement.textContent = 'URL: Waiting...';
+
+		// Only reset URL info to "Waiting..." if the profile is not in a final state
+		const urlInfoElement = document.getElementById(`profileUrlInfo${i}`);
+		if (urlInfoElement && statusElement) {
+			const currentStatus = statusElement.textContent;
+			// Don't change URL info if profile is already completed, success, or failed
+			if (!['completed', 'success', 'failed', 'error'].includes(currentStatus)) {
+				urlInfoElement.textContent = 'URL: Waiting...';
+			}
 		}
 	}
 

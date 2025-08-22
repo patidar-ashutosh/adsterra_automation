@@ -3,32 +3,173 @@
 
 // Track current cycle for UI updates
 let currentCycle = 1; // Initialize to 1 to match backend
+let completionPopupShown = false; // Flag to prevent multiple completion popups
 
 // Function to check automation status
 async function checkStatus() {
-	const statusDiv = document.getElementById('status');
-	const progressFill = document.getElementById('progressFill');
-	const progressText = document.getElementById('progressText');
-	const cycleText = document.getElementById('cycleText');
-	const completedText = document.getElementById('completedText');
-	const failedText = document.getElementById('failedText');
-	const successText = document.getElementById('successText');
+	const logsCycleText = document.getElementById('logsCycleText');
+	const logsProgressText = document.getElementById('logsProgressText');
+	const logsCompletedText = document.getElementById('logsCompletedText');
+	const logsFailedText = document.getElementById('logsFailedText');
+	const logsSuccessText = document.getElementById('logsSuccessText');
 
 	try {
 		const response = await fetch('/automation-status');
 		const data = await response.json();
 
-		if (data.status === 'completed') {
-			// Update status and set automation state
-			statusDiv.innerText = `Status: Automation completed ✅ (${data.completedWindows}/${
-				data.totalWindows
-			} profiles completed, ${data.successWindows || 0} successful, ${
-				data.failedWindows || 0
-			} failed across all cycles)`;
+		// Check for cycle change
+		const newCycle = data.currentCycle || 1;
+		if (newCycle !== currentCycle) {
+			console.log(`🔄 Cycle change detected: ${currentCycle} → ${newCycle}`);
+
+			// Show cycle completion message for the previous cycle (only if it's not the first cycle)
+			if (currentCycle > 1 && typeof showCycleCompletionMessage === 'function') {
+				const completedProfiles = data.completedWindows || 0;
+				const totalProfiles = data.totalWindows || 0;
+				console.log(`✅ Showing completion message for cycle ${currentCycle}`);
+				showCycleCompletionMessage(currentCycle, completedProfiles, totalProfiles);
+			}
+
+			// Show preparation message for new cycle (only if it's not the first cycle)
+			if (newCycle > 1 && typeof showCyclePreparationMessage === 'function') {
+				console.log(`⏳ Showing preparation message for cycle ${newCycle}`);
+				showCyclePreparationMessage(newCycle);
+			}
+
+			currentCycle = newCycle;
+		}
+
+		// Check if we're transitioning from waiting to running/preparing
+		// This means the 5-second delay has ended and the cycle is starting
+		if (data.status === 'running' || data.status === 'preparing') {
+			console.log(`🚀 Cycle starting - hiding preparation message`);
+			// Hide any preparation messages immediately when cycle starts
+			if (typeof hideCyclePreparationMessage === 'function') {
+				hideCyclePreparationMessage();
+			}
+		}
+
+		if (data.status === 'completed' && !completionPopupShown) {
+			// Set flag to prevent multiple popups
+			completionPopupShown = true;
+
+			// Show completion popup first (like start/stop automation)
+			const completionContent = `
+				<p style="margin-bottom: 20px; color: #4caf50; font-weight: 600;">🎉 Automation Completed Successfully!</p>
+				<div class="data-item">
+					<span class="data-label">Total Profiles:</span>
+					<span class="data-value">${data.totalWindows}</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Completed:</span>
+					<span class="data-value">${data.completedWindows}</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Successful:</span>
+					<span class="data-value">${data.successWindows || 0}</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Failed:</span>
+					<span class="data-value">${data.failedWindows || 0}</span>
+				</div>
+				<div class="data-item">
+					<span class="data-label">Total Cycles:</span>
+					<span class="data-value">${data.totalCycles || 3}</span>
+				</div>
+				<p style="margin-top: 20px; color: #2196f3; font-weight: 600;">Redirecting to automation panel in 5 seconds...</p>
+			`;
+
+			// Use window.showPopup if available - with OK button for user control
+			if (typeof window.showPopup === 'function') {
+				// Show popup with OK button for user control
+				window.showPopup('🎯 Automation Completed', completionContent, 'OK');
+
+				// Set up OK button click handler
+				setTimeout(() => {
+					const popupConfirm = document.getElementById('popupConfirm');
+					if (popupConfirm) {
+						popupConfirm.onclick = () => {
+							if (typeof window.hidePopup === 'function') {
+								window.hidePopup();
+							}
+						};
+					}
+				}, 100);
+
+				// Auto-hide popup after 5 seconds as fallback
+				setTimeout(() => {
+					if (typeof window.hidePopup === 'function') {
+						window.hidePopup();
+					}
+				}, 5000);
+			} else {
+				// Fallback to alert
+				alert(
+					`Automation completed! ${data.completedWindows}/${
+						data.totalWindows
+					} profiles completed, ${data.successWindows || 0} successful, ${
+						data.failedWindows || 0
+					} failed across all cycles.`
+				);
+			}
+
+			// Update logs status area with final values
+			if (logsCycleText)
+				logsCycleText.textContent = `${data.currentCycle || 1} / ${data.totalCycles || 3}`;
+			if (logsProgressText) logsProgressText.textContent = `100%`;
+			if (logsCompletedText)
+				logsCompletedText.textContent = `${data.completedWindows}/${data.totalWindows}`;
+			if (logsSuccessText) logsSuccessText.textContent = data.successWindows || 0;
+			if (logsFailedText) logsFailedText.textContent = data.failedWindows || 0;
+
+			// Update progress bar to 100%
+			const progressBar = document.getElementById('logsProgressBar');
+			if (progressBar) {
+				progressBar.style.width = `100%`;
+			}
+
 			setAutomationState(false);
 
-			// Continue with normal status checking
-			setTimeout(checkStatus, 500);
+			// Wait 5 seconds then redirect back to automation panel (increased from 3s to 5s)
+			setTimeout(() => {
+				console.log('🔄 Redirecting to automation panel after completion');
+				// Switch back to automation panel
+				document.querySelectorAll('.panel').forEach((p) => p.classList.remove('show'));
+				document.getElementById('panel-automation').classList.add('show');
+
+				// Show automation summary section
+				const automationSummarySection = document.querySelector(
+					'.automation-summary-section'
+				);
+				if (automationSummarySection) {
+					automationSummarySection.style.display = 'flex';
+				}
+
+				// Show toolbar
+				const toolbar = document.querySelector('.toolbar');
+				if (toolbar) {
+					toolbar.style.display = 'flex';
+				}
+
+				// Show automation navigation
+				const automationNav = document.querySelector('[data-panel="automation"]');
+				if (automationNav) {
+					automationNav.style.display = 'flex';
+					automationNav.classList.add('active');
+				}
+
+				// Hide logs navigation
+				const logsNav = document.querySelector('[data-panel="logs"]');
+				if (logsNav) {
+					logsNav.style.display = 'none';
+					logsNav.classList.remove('active');
+				}
+
+				// Reset automation state
+				document.body.classList.remove('automation-running');
+			}, 5000); // Increased to 5 seconds
+
+			// Don't stop status checking - continue for real-time updates
 		} else if (data.activeWindows > 0) {
 			// Create status with only active window details
 			let statusText = `Running: ${data.activeWindows} profiles`;
@@ -43,77 +184,136 @@ async function checkStatus() {
 				updateProfileTimes(data.activeWindowDetails);
 			}
 
-			statusDiv.innerText = statusText;
+			// Update logs status area with real-time values
+			if (logsCycleText)
+				logsCycleText.textContent = `${data.currentCycle || 1} / ${data.totalCycles || 3}`;
+			if (logsProgressText) logsProgressText.textContent = `${data.progress || 0}%`;
+			if (logsCompletedText)
+				logsCompletedText.textContent = `${data.completedWindows}/${data.totalWindows}`;
+			if (logsSuccessText) logsSuccessText.textContent = data.successWindows || 0;
+			if (logsFailedText) logsFailedText.textContent = data.failedWindows || 0;
 
-			// Update progress bar
-			progressFill.style.width = `${data.progress}%`;
-			progressText.textContent = `Progress: ${data.progress}%`;
-			cycleText.textContent = `Current Cycle: ${data.currentCycle || 1}`;
-			completedText.textContent = `Completed: ${data.completedWindows}/${data.totalWindows}`;
-			successText.textContent = `Success: ${data.successWindows || 0}`;
-			failedText.textContent = `Failed: ${data.failedWindows || 0}`;
+			// Update progress bar with real-time progress
+			const progressBar = document.getElementById('logsProgressBar');
+			if (progressBar) {
+				progressBar.style.width = `${data.progress || 0}%`;
+			}
 
 			setAutomationState(true);
 		} else if (data.status === 'idle') {
-			statusDiv.innerText = 'Status: Ready to start automation...';
 			setAutomationState(false);
 			currentCycle = 1; // Reset cycle counter to 1
-		} else {
-			statusDiv.innerText = 'Status: Preparing automation cycles...';
+		} else if (data.status === 'waiting') {
+			// We're in the 5-second delay between cycles
+			// Show next cycle preparation message
+			if (typeof showCyclePreparationMessage === 'function') {
+				showCyclePreparationMessage(data.nextCycle || data.currentCycle + 1);
+			}
+
+			// Update logs status area even during waiting state
+			if (data.completedWindows !== undefined && data.totalWindows !== undefined) {
+				if (logsCycleText)
+					logsCycleText.textContent = `${data.currentCycle || 1} / ${
+						data.totalCycles || 3
+					}`;
+				if (logsProgressText) logsProgressText.textContent = `${data.progress || 0}%`;
+				if (logsCompletedText)
+					logsCompletedText.textContent = `${data.completedWindows}/${data.totalWindows}`;
+				if (logsSuccessText) logsSuccessText.textContent = data.successWindows || 0;
+				if (logsFailedText) logsFailedText.textContent = data.failedWindows || 0;
+
+				// Update progress bar
+				const progressBar = document.getElementById('logsProgressBar');
+				if (progressBar) {
+					progressBar.style.width = `${data.progress || 0}%`;
+				}
+			}
+
+			setAutomationState(true);
+		} else if (data.status === 'running' || data.status === 'preparing') {
+			// Cycle has started or is preparing - hide any preparation messages
+			if (typeof hideCyclePreparationMessage === 'function') {
+				hideCyclePreparationMessage();
+			}
+
 			setAutomationState(true);
 
-			// Update progress values even when preparing for next cycle
+			// Update logs status values even when preparing for next cycle
 			if (data.completedWindows !== undefined && data.totalWindows !== undefined) {
-				progressFill.style.width = `${data.progress || 0}%`;
-				progressText.textContent = `Progress: ${data.progress || 0}%`;
-				cycleText.textContent = `Current Cycle: ${data.currentCycle || 1}`;
-				completedText.textContent = `Completed: ${data.completedWindows}/${data.totalWindows}`;
-				successText.textContent = `Success: ${data.successWindows || 0}`;
-				failedText.textContent = `Failed: ${data.failedWindows || 0}`;
+				if (logsCycleText)
+					logsCycleText.textContent = `${data.currentCycle || 1} / ${
+						data.totalCycles || 3
+					}`;
+				if (logsProgressText) logsProgressText.textContent = `${data.progress || 0}%`;
+				if (logsCompletedText)
+					logsCompletedText.textContent = `${data.completedWindows}/${data.totalWindows}`;
+				if (logsSuccessText) logsSuccessText.textContent = data.successWindows || 0;
+				if (logsFailedText) logsFailedText.textContent = data.failedWindows || 0;
+
+				// Update progress bar
+				const progressBar = document.getElementById('logsProgressBar');
+				if (progressBar) {
+					progressBar.style.width = `${data.progress || 0}%`;
+				}
 			}
+		} else {
+			// Other statuses
+			setAutomationState(true);
 		}
 
+		// Continue checking status every 500ms for real-time updates
 		setTimeout(checkStatus, 500);
 	} catch (error) {
 		console.error('Status check failed:', error);
-		statusDiv.innerText = 'Status: Error checking status...';
+		// Continue checking even if there's an error
+		setTimeout(checkStatus, 500);
 	}
 }
 
 // Function to handle form submission
 async function handleFormSubmission(e) {
 	e.preventDefault();
+	console.log('🚀 Form submission started');
+	console.log('📝 Event target:', e.target);
+	console.log('📝 Event target type:', typeof e.target);
+	console.log('📝 Event target is form:', e.target instanceof HTMLFormElement);
 
-	// Validate all URLs first
-	const invalidUrls = validateAllURLs();
-	if (invalidUrls.length > 0) {
-		const errorMessage = `Please fix the following invalid URLs:\n${invalidUrls
-			.map((item) => `${item.index}. ${item.url}`)
-			.join('\n')}`;
-		alert(errorMessage);
+	// Use comprehensive validation
+	if (!validateForm()) {
+		console.log('❌ Form validation failed');
 		return;
 	}
 
-	// Validate wait times
-	if (!validateWaitTimes()) {
-		return;
-	}
-
-	const form = e.target;
-	const formData = new FormData(form);
-	const payload = Object.fromEntries(formData.entries());
-
-	// Collect all URLs
-	const urlInputs = document.querySelectorAll('.website-url-input');
-	const urls = Array.from(urlInputs)
-		.map((input) => input.value.trim())
-		.filter((url) => url);
+	// Get validated URLs from validation
+	const urlValidation = validateAllURLs();
+	const urls = urlValidation.validUrls;
+	console.log('🌐 Validated URLs:', urls);
 
 	// Validate that we have at least one URL
 	if (urls.length === 0) {
-		alert('Please enter at least one website URL');
+		alert('Please enter at least one valid website URL');
 		return;
 	}
+
+	// Get form values directly from elements to ensure we have all data
+	const browser = document.getElementById('browser')?.value || 'random';
+	const profilesAtOnce = document.getElementById('profilesAtOnce')?.value || '3';
+	const openCount = document.getElementById('openCount')?.value || '3';
+	const timeout = document.getElementById('timeout')?.value || '45';
+	const minWaitTime = document.getElementById('minWaitTime')?.value || '45';
+	const maxWaitTime = document.getElementById('maxWaitTime')?.value || '55';
+
+	// Create payload with actual values
+	const actualPayload = {
+		browser,
+		profilesAtOnce,
+		openCount,
+		timeout,
+		minWaitTime,
+		maxWaitTime
+	};
+
+	console.log('📋 Actual payload:', actualPayload);
 
 	// Show start confirmation popup
 	const startContent = `
@@ -130,83 +330,177 @@ async function handleFormSubmission(e) {
 		</div>
 		<div class="data-item">
 			<span class="data-label">Browser:</span>
-			<span class="data-value">${payload.browser}</span>
+			<span class="data-value">${browser}</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Cycles:</span>
-			<span class="data-value">${payload.openCount}</span>
+			<span class="data-value">${openCount}</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Profiles per Website:</span>
-			<span class="data-value">${payload.profilesAtOnce}</span>
+			<span class="data-value">${profilesAtOnce}</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Loading Timeout:</span>
-			<span class="data-value">${payload.timeout}s</span>
+			<span class="data-value">${timeout}s</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Session Duration:</span>
-			<span class="data-value">${payload.minWaitTime}-${payload.maxWaitTime}s</span>
+			<span class="data-value">${minWaitTime}-${maxWaitTime}s</span>
 		</div>
 		<p style="margin-top: 20px; color: #4caf50; font-weight: 600;">Total Profiles: ${
-			urls.length * payload.profilesAtOnce
+			urls.length * parseInt(profilesAtOnce)
 		}</p>
 		<p style="margin-top: 10px; color: #2196f3; font-weight: 600;">Total Sessions: ${
-			urls.length * payload.profilesAtOnce * payload.openCount
+			urls.length * parseInt(profilesAtOnce) * parseInt(openCount)
 		}</p>
 	`;
 
-	showPopup('🚀 Start Website Automation', startContent, 'Start Automation');
+	console.log('�� Attempting to show popup...');
 
-	// Handle confirmation
+	// Use window.showPopup if available, otherwise fall back to alert
+	if (typeof window.showPopup === 'function') {
+		console.log('✅ Using window.showPopup');
+		window.showPopup('🚀 Start Website Automation', startContent, 'Start Automation');
+
+		// Wait a bit for the popup to be created, then set up the event handler
+		setTimeout(() => {
+			setupPopupConfirmation(urls, actualPayload);
+		}, 100);
+	} else {
+		console.log('⚠️ window.showPopup not available, using fallback');
+		// Fallback to simple confirmation
+		if (confirm('Start automation with these settings?')) {
+			console.log('✅ Confirmation accepted, starting automation...');
+			startAutomation(urls, actualPayload);
+		} else {
+			console.log('❌ Confirmation rejected');
+		}
+	}
+}
+
+// Function to set up popup confirmation
+function setupPopupConfirmation(urls, payload) {
+	console.log('🔧 Setting up popup confirmation...');
+
 	const popupConfirm = document.getElementById('popupConfirm');
-	popupConfirm.onclick = async () => {
-		hidePopup();
+	if (popupConfirm) {
+		console.log('✅ Found popupConfirm button, setting up event handler');
 
-		// Get total profiles count and create log areas
-		const totalProfiles = urls.length * parseInt(payload.profilesAtOnce);
+		// Remove any existing event listeners
+		const newButton = popupConfirm.cloneNode(true);
+		popupConfirm.parentNode.replaceChild(newButton, popupConfirm);
+
+		// Set up new event handler
+		newButton.onclick = async () => {
+			console.log('✅ Popup confirm clicked, starting automation...');
+			if (typeof window.hidePopup === 'function') {
+				window.hidePopup();
+			}
+			await startAutomation(urls, payload);
+		};
+	} else {
+		console.error('❌ popupConfirm button not found!');
+		// If popup didn't work, start directly
+		console.log('🚀 Starting automation directly due to popup failure');
+		startAutomation(urls, payload);
+	}
+}
+
+// Function to reset logs status values
+function resetLogsStatusValues() {
+	const logsCycleText = document.getElementById('logsCycleText');
+	const logsProgressText = document.getElementById('logsProgressText');
+	const logsCompletedText = document.getElementById('logsCompletedText');
+	const logsSuccessText = document.getElementById('logsSuccessText');
+	const logsFailedText = document.getElementById('logsFailedText');
+	const logsProgressBar = document.getElementById('logsProgressBar');
+
+	// Reset all status values to initial state
+	if (logsCycleText) logsCycleText.textContent = '1';
+	if (logsProgressText) logsProgressText.textContent = '0%';
+	if (logsCompletedText) logsCompletedText.textContent = '0/0';
+	if (logsSuccessText) logsSuccessText.textContent = '0';
+	if (logsFailedText) logsFailedText.textContent = '0';
+	if (logsProgressBar) logsProgressBar.style.width = '0%';
+}
+
+// Separate function to start automation
+async function startAutomation(urls, payload) {
+	console.log('🚀 startAutomation function called with:', { urls, payload });
+
+	// Get total profiles count and create log areas
+	const totalProfiles = urls.length * parseInt(payload.profilesAtOnce);
+	console.log(`👥 Total profiles to create: ${totalProfiles}`);
+
+	// Reset logs status values to clear any old automation data
+	resetLogsStatusValues();
+
+	// Reset cycle counter for new automation
+	currentCycle = 1;
+
+	// Reset completion flag for new automation
+	completionPopupShown = false;
+
+	try {
+		console.log('📝 Creating profile logs...');
 		createProfileLogs(totalProfiles);
+		console.log('✅ Profile logs created successfully');
+	} catch (error) {
+		console.error('❌ Error creating profile logs:', error);
+	}
 
-		// Immediately set automation state to prevent button flickering
-		setAutomationState(true);
-		const statusDiv = document.getElementById('status');
-		statusDiv.innerText = 'Status: Starting automation...';
+	// Immediately set automation state to prevent button flickering
+	console.log('🔄 Setting automation state to running...');
+	setAutomationState(true);
 
-		try {
-			// Prepare payload with URLs array
-			const automationPayload = {
-				...payload,
-				websiteURLs: urls
-			};
+	console.log('✅ Status updated to "Starting automation..."');
 
-			const res = await fetch('/open-url', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(automationPayload)
-			});
+	try {
+		// Prepare payload with URLs array
+		const automationPayload = {
+			...payload,
+			websiteURLs: urls
+		};
+		console.log('📤 Sending automation payload to backend:', automationPayload);
 
-			const result = await res.json();
+		const res = await fetch('/open-url', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(automationPayload)
+		});
 
-			if (result.success) {
-				// Clear any existing logs and add initial messages
+		console.log('📥 Backend response received:', res.status, res.statusText);
+		const result = await res.json();
+		console.log('📋 Backend result:', result);
+
+		if (result.success) {
+			console.log('✅ Backend automation started successfully');
+			// Clear any existing logs and add initial messages
+			try {
+				console.log('🧹 Clearing existing profile logs...');
 				clearAllProfileLogs();
+				console.log('✅ Profile logs cleared');
+
+				console.log('📝 Adding initial log messages...');
 				for (let i = 1; i <= totalProfiles; i++) {
 					appendProfileLog(i, `🚀 Starting Profile ${i}`);
 					appendProfileLog(i, `⏳ Waiting for automation to start...`);
 				}
-			} else {
-				console.error(`Failed: ${result.error}`);
-				// Reset state if automation failed to start
-				setAutomationState(false);
-				statusDiv.innerText = 'Status: Failed to start automation';
+				console.log('✅ Initial log messages added');
+			} catch (error) {
+				console.error('❌ Error updating profile logs:', error);
 			}
-		} catch (err) {
-			console.error(`Error: ${err.message}`);
-			// Reset state if there was an error
+		} else {
+			console.error(`❌ Backend automation failed: ${result.error}`);
+			// Reset state if automation failed to start
 			setAutomationState(false);
-			statusDiv.innerText = 'Status: Error starting automation';
 		}
-	};
+	} catch (err) {
+		console.error(`❌ Network error starting automation: ${err.message}`);
+		// Reset state if there was an error
+		setAutomationState(false);
+	}
 }
 
 // Function to handle stop automation
@@ -223,48 +517,191 @@ async function handleStopAutomation() {
 		<p style="color: #4caf50; font-weight: 600;">Any completed profiles will be preserved.</p>
 	`;
 
-	showPopup('🛑 Stop Automation', stopContent, 'Stop Automation', true);
+	// Use window.showPopup if available, otherwise fall back to alert
+	if (typeof window.showPopup === 'function') {
+		window.showPopup('🛑 Stop Automation', stopContent, 'Stop Automation', true);
+	} else {
+		// Fallback to simple confirmation
+		if (confirm('Are you sure you want to stop the automation?')) {
+			await stopAutomation();
+		}
+		return;
+	}
 
 	// Handle stop confirmation
 	const popupConfirm = document.getElementById('popupConfirm');
-	popupConfirm.onclick = async () => {
-		hidePopup();
-
-		try {
-			const response = await fetch('/stop-automation', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-
-			const result = await response.json();
-
-			if (result.success) {
-				const statusDiv = document.getElementById('status');
-				statusDiv.innerText = 'Status: Automation stopped';
-				setAutomationState(false);
-			} else {
-				console.error(`Failed to stop automation: ${result.error}`);
+	if (popupConfirm) {
+		popupConfirm.onclick = async () => {
+			if (typeof window.hidePopup === 'function') {
+				window.hidePopup();
 			}
-		} catch (err) {
-			console.error(`Error stopping automation: ${err.message}`);
+			await stopAutomation();
+		};
+	} else {
+		// If popup didn't work, stop directly
+		await stopAutomation();
+	}
+}
+
+// Separate function to stop automation
+async function stopAutomation() {
+	try {
+		const response = await fetch('/stop-automation', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' }
+		});
+
+		const result = await response.json();
+
+		if (result.success) {
+			setAutomationState(false);
+		} else {
+			console.error(`Failed to stop automation: ${result.error}`);
 		}
-	};
+	} catch (err) {
+		console.error(`Error stopping automation: ${err.message}`);
+	}
+}
+
+// Function to set automation state
+function setAutomationState(isRunning) {
+	const startButton = document.getElementById('startBtn');
+	const automationNav = document.querySelector('[data-panel="automation"]');
+	const logsNav = document.querySelector('[data-panel="logs"]');
+	const toolbar = document.querySelector('.toolbar');
+	const automationSection = document.getElementById('panel-automation');
+	const logsStatusCard = document.getElementById('logsStatusCard');
+
+	if (isRunning) {
+		document.body.classList.add('automation-running');
+		if (startButton) startButton.style.display = 'none';
+
+		// Show the logs status area
+		if (logsStatusCard) {
+			logsStatusCard.style.display = 'block';
+		}
+
+		// Hide the toolbar when automation is running
+		if (toolbar) {
+			toolbar.style.display = 'none';
+		}
+
+		// Hide the automation summary section when automation is running
+		const automationSummarySection = document.querySelector('.automation-summary-section');
+		if (automationSummarySection) {
+			automationSummarySection.style.display = 'none';
+		}
+
+		// Hide the automation navigation link
+		if (automationNav) {
+			automationNav.style.display = 'none';
+		}
+
+		// Show logs panel and hide automation panel
+		if (logsNav) logsNav.style.display = 'block';
+		if (logsNav) logsNav.classList.add('active');
+
+		// Switch to logs panel (only the status panel, not the entire automation section)
+		document.querySelectorAll('.panel').forEach((p) => p.classList.remove('show'));
+		document.getElementById('panel-logs').classList.add('show');
+
+		if (typeof startLogUpdates === 'function') startLogUpdates();
+		if (typeof connectToLogStream === 'function') connectToLogStream();
+	} else {
+		document.body.classList.remove('automation-running');
+		if (startButton) startButton.style.display = 'block';
+
+		// Hide the logs status area
+		if (logsStatusCard) {
+			logsStatusCard.style.display = 'none';
+		}
+
+		// Show the toolbar when automation is stopped
+		if (toolbar) {
+			toolbar.style.display = 'flex';
+		}
+
+		// Show the automation summary section when automation is stopped
+		const automationSummarySection = document.querySelector('.automation-summary-section');
+		if (automationSummarySection) {
+			automationSummarySection.style.display = 'flex';
+		}
+
+		// Show the automation navigation link
+		if (automationNav) {
+			automationNav.style.display = 'flex';
+		}
+
+		// Show automation panel and hide logs panel
+		if (logsNav) logsNav.style.display = 'none';
+		if (logsNav) logsNav.classList.remove('active');
+		if (automationNav) automationNav.classList.add('active');
+
+		// Switch to automation panel (only the status panel, not the entire automation section)
+		document.querySelectorAll('.panel').forEach((p) => p.classList.remove('show'));
+		document.getElementById('panel-automation').classList.add('show');
+
+		if (typeof stopLogUpdates === 'function') stopLogUpdates();
+		if (typeof disconnectFromLogStream === 'function') disconnectFromLogStream();
+	}
 }
 
 // Initialize automation controls
 function initializeAutomation() {
 	const form = document.getElementById('automationForm');
-	const stopButton = document.getElementById('stopButton');
+	const startButton = document.getElementById('startBtn');
+	const logsStopButton = document.getElementById('logsStopBtn');
+
+	console.log('🔧 Initializing automation controls...');
+	console.log('📝 Form found:', !!form);
+	console.log('🚀 Start button found:', !!startButton);
+	console.log('🛑 Logs stop button found:', !!logsStopButton);
 
 	// Form submission handler
-	form.addEventListener('submit', handleFormSubmission);
+	if (form) {
+		form.addEventListener('submit', handleFormSubmission);
+		console.log('✅ Form submission handler attached');
+	} else {
+		console.error('❌ Form not found!');
+	}
 
-	// Stop automation button handler
-	stopButton.addEventListener('click', handleStopAutomation);
+	// Start button click handler (since it's outside the form)
+	if (startButton) {
+		startButton.addEventListener('click', async (e) => {
+			console.log('🚀 Start button clicked!');
+			e.preventDefault();
+
+			// Manually trigger form submission by calling handleFormSubmission directly
+			if (form) {
+				console.log('📝 Manually triggering form submission...');
+				// Create a fake event object with the form as target
+				const fakeEvent = {
+					preventDefault: () => {},
+					target: form
+				};
+				await handleFormSubmission(fakeEvent);
+			} else {
+				console.error('❌ Form not found for manual submission!');
+			}
+		});
+		console.log('✅ Start button click handler attached');
+	} else {
+		console.error('❌ Start button not found!');
+	}
+
+	// Logs stop button handler
+	if (logsStopButton) {
+		logsStopButton.addEventListener('click', handleStopAutomation);
+		console.log('✅ Logs stop button click handler attached');
+	} else {
+		console.error('❌ Logs stop button not found!');
+	}
 
 	// Start status checking
 	checkStatus();
 
 	// Connect to log stream when page loads
 	connectToLogStream();
+
+	console.log('✅ Automation controls initialization complete');
 }

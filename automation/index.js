@@ -455,6 +455,9 @@ async function runAutomation(config) {
 	const profilesPerUrl = Math.max(1, Math.min(parseInt(profilesAtOnce), 10));
 	const totalUrls = targetUrls.length;
 
+	// Set global variables for status tracking
+	global.totalCycles = totalCycles;
+
 	totalWindows = totalCycles * profilesPerUrl * totalUrls;
 	completedWindows = 0;
 	failedWindows = 0; // Reset failed count
@@ -539,7 +542,23 @@ async function runAutomation(config) {
 		// Small delay between cycles (except for the last cycle)
 		if (cycle < totalCycles && !shouldStop) {
 			log(`🕔 Waiting 5s before Cycle ${cycle + 1}...`);
+
+			// Update status to indicate we're waiting for next cycle
+			isAutomationInProgress = true;
+			activeWindows.clear(); // Clear active windows during delay
+
+			// Set a flag to indicate we're in the delay period
+			global.isInCycleDelay = true;
+			global.nextCycleNumber = cycle + 1;
+
 			await new Promise((r) => setTimeout(r, 5000));
+
+			// Clear the delay flag
+			global.isInCycleDelay = false;
+			global.nextCycleNumber = null;
+
+			// Send a signal that the delay has ended and cycle is starting
+			log(`🚀 Starting Cycle ${cycle + 1} after delay`);
 		}
 	}
 
@@ -549,6 +568,12 @@ async function runAutomation(config) {
 		log(`🎉 All ${totalCycles} cycles completed successfully!`);
 	}
 
+	// Store completion counts before resetting for status reporting
+	const finalCompletedWindows = completedWindows;
+	const finalFailedWindows = failedWindows;
+	const finalSuccessWindows = successWindows;
+	const finalTotalWindows = totalWindows;
+
 	// Reset automation state to show start button
 	activeWindows.clear();
 	completedWindows = 0;
@@ -556,6 +581,15 @@ async function runAutomation(config) {
 	successWindows = 0; // Reset success count
 	totalWindows = 0;
 	isAutomationInProgress = false; // Mark automation as completed
+
+	// Set a flag to indicate completion for the next status check
+	global.automationJustCompleted = {
+		completedWindows: finalCompletedWindows,
+		failedWindows: finalFailedWindows,
+		successWindows: finalSuccessWindows,
+		totalWindows: finalTotalWindows,
+		totalCycles: totalCycles
+	};
 }
 
 // Function to stop all active browsers
@@ -608,25 +642,60 @@ function getStatus() {
 		};
 	});
 
-	return {
-		totalWindows,
-		completedWindows,
-		failedWindows, // Add failedWindows to the status
-		successWindows, // Add successWindows to the status
+	// Check if we're in a cycle delay period
+	const isInDelay = global.isInCycleDelay || false;
+	const nextCycle = global.nextCycleNumber || null;
+
+	// Check if automation just completed
+	const justCompleted = global.automationJustCompleted || null;
+
+	// Determine status
+	let status;
+	if (justCompleted) {
+		// Automation just completed - return completion status
+		status = 'completed';
+	} else if (isAutomationInProgress) {
+		// Automation is in progress
+		if (activeWindows.size > 0) {
+			status = 'running';
+		} else if (isInDelay) {
+			status = 'waiting';
+		} else {
+			status = 'preparing';
+		}
+	} else {
+		// No automation in progress
+		status = 'idle';
+	}
+
+	// Use completion data if available, otherwise use current counts
+	const statusData = {
+		totalWindows: justCompleted ? justCompleted.totalWindows : totalWindows,
+		completedWindows: justCompleted ? justCompleted.completedWindows : completedWindows,
+		failedWindows: justCompleted ? justCompleted.failedWindows : failedWindows,
+		successWindows: justCompleted ? justCompleted.successWindows : successWindows,
 		activeWindows: activeWindows.size,
-		progress: totalWindows > 0 ? Math.round((completedWindows / totalWindows) * 100) : 0,
+		progress: justCompleted
+			? 100
+			: totalWindows > 0
+			? Math.round((completedWindows / totalWindows) * 100)
+			: 0,
 		activeWindowDetails,
-		status: isAutomationInProgress
-			? activeWindows.size > 0
-				? 'running'
-				: 'preparing'
-			: completedWindows > 0
-			? 'completed'
-			: 'idle',
+		status,
 		shouldStop,
-		currentCycle,
-		profilesPerCycle
+		currentCycle: justCompleted ? justCompleted.totalCycles : currentCycle,
+		profilesPerCycle,
+		isInDelay,
+		nextCycle,
+		totalCycles: global.totalCycles || 3
 	};
+
+	// Clear the completion flag after first use
+	if (justCompleted) {
+		global.automationJustCompleted = null;
+	}
+
+	return statusData;
 }
 
 module.exports = { runAutomation, getStatus, stopAutomation, stopAllBrowsers };

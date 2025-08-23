@@ -2,6 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const { runAutomation } = require('../automation');
+const {
+	getDeviceCategories,
+	getDevicesInCategory,
+	getDeviceByName,
+	generateRandomDevice
+} = require('../utils/mobileDevices');
 
 router.post('/', async (req, res) => {
 	try {
@@ -13,7 +19,9 @@ router.post('/', async (req, res) => {
 			timeout,
 			minWaitTime,
 			maxWaitTime,
-			headless
+			headless,
+			deviceCategory = 'desktop',
+			specificDevice = null
 		} = req.body;
 
 		// Handle website URLs
@@ -28,6 +36,27 @@ router.post('/', async (req, res) => {
 				success: false,
 				error: 'Missing website URLs'
 			});
+		}
+
+		// Validate device category
+		const validDeviceCategories = ['desktop', 'mobile', 'tablet', 'random'];
+		if (!validDeviceCategories.includes(deviceCategory)) {
+			return res.status(400).json({
+				success: false,
+				error: `Invalid device category. Must be one of: ${validDeviceCategories.join(
+					', '
+				)}`
+			});
+		}
+
+		// Validate specific device if provided
+		let deviceInfo = null;
+		if (specificDevice && typeof specificDevice === 'string') {
+			try {
+				deviceInfo = getDeviceByName(specificDevice);
+			} catch (error) {
+				console.log(`Device not found, will generate new one: ${error.message}`);
+			}
 		}
 
 		// Validate each URL format and clean them
@@ -111,6 +140,29 @@ router.post('/', async (req, res) => {
 			});
 		}
 
+		// Determine final device category and device info
+		let finalDeviceCategory = deviceCategory;
+		let finalSpecificDevice = specificDevice;
+
+		if (deviceCategory === 'random') {
+			// Randomly select between mobile and desktop
+			finalDeviceCategory = Math.random() > 0.5 ? 'mobile' : 'desktop';
+		}
+
+		// If no specific device and mobile/tablet, generate one
+		if (
+			(finalDeviceCategory === 'mobile' || finalDeviceCategory === 'tablet') &&
+			!finalSpecificDevice
+		) {
+			try {
+				const randomDevice = generateRandomDevice(finalDeviceCategory);
+				finalSpecificDevice = randomDevice.name;
+				deviceInfo = randomDevice;
+			} catch (error) {
+				console.log(`Failed to generate random device: ${error.message}`);
+			}
+		}
+
 		// Send initial response
 		res.json({
 			success: true,
@@ -123,10 +175,21 @@ router.post('/', async (req, res) => {
 			timeout: pageTimeout,
 			minWait,
 			maxWait,
-			totalSessions
+			totalSessions,
+			deviceCategory: finalDeviceCategory,
+			specificDevice: finalSpecificDevice,
+			deviceInfo: deviceInfo
+				? {
+						name: finalSpecificDevice,
+						platform: deviceInfo.platform,
+						os: deviceInfo.os,
+						viewport: deviceInfo.viewport,
+						touchPoints: deviceInfo.maxTouchPoints
+				  }
+				: null
 		});
 
-		// Run automation in background with multiple URLs
+		// Run automation in background with multiple URLs and device settings
 		runAutomation({
 			urls: cleanedUrls,
 			originalUrls: cleanedUrls,
@@ -136,7 +199,9 @@ router.post('/', async (req, res) => {
 			timeout: pageTimeout,
 			minWaitTime: minWait,
 			maxWaitTime: maxWait,
-			headless: headless !== undefined ? headless : false
+			headless: headless !== undefined ? headless : false,
+			deviceCategory: finalDeviceCategory,
+			specificDevice: finalSpecificDevice
 		}).catch((err) => {
 			console.error('Automation error:', err);
 		});
@@ -145,6 +210,31 @@ router.post('/', async (req, res) => {
 		res.status(500).json({
 			success: false,
 			error: 'Internal server error'
+		});
+	}
+});
+
+// New endpoint to get available device categories and devices
+router.get('/devices', (req, res) => {
+	try {
+		const categories = getDeviceCategories();
+		const devices = {};
+
+		categories.forEach((category) => {
+			// Generate 5 random devices for each category
+			devices[category] = getDevicesInCategory(category, 5);
+		});
+
+		res.json({
+			success: true,
+			categories,
+			devices
+		});
+	} catch (error) {
+		console.error('Error getting devices:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Failed to get device information'
 		});
 	}
 });

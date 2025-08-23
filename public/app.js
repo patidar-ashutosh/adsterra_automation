@@ -501,6 +501,247 @@ function initializeMobileMenu() {
 	}
 }
 
+// ===== Mobile Device Management =====
+let availableDevices = {};
+let currentDeviceCategory = 'desktop';
+let currentSpecificDevice = null;
+
+// Function to fetch available devices from backend
+async function fetchAvailableDevices() {
+	try {
+		const response = await fetch('/open-url/devices');
+		const data = await response.json();
+
+		if (data.success) {
+			availableDevices = data.devices;
+			console.log('📱 Available devices loaded:', availableDevices);
+		}
+	} catch (error) {
+		console.error('❌ Failed to fetch devices:', error);
+	}
+}
+
+// Function to populate device options
+function populateDeviceOptions() {
+	const specificDeviceSelect = document.getElementById('specificDevice');
+	if (!specificDeviceSelect) return;
+
+	// Clear existing options
+	specificDeviceSelect.innerHTML = '<option value="">Select a device...</option>';
+
+	// Map frontend categories to backend categories
+	const categoryMapping = {
+		mobile: 'mobile', // Frontend 'mobile' maps to backend 'mobile'
+		tablet: 'tablet', // Frontend 'tablet' maps to backend 'tablet'
+		desktop: 'desktop' // Frontend 'desktop' maps to backend 'desktop'
+	};
+
+	const backendCategory = categoryMapping[currentDeviceCategory];
+
+	if (backendCategory && availableDevices[backendCategory]) {
+		const devices = availableDevices[backendCategory];
+		devices.forEach((deviceName) => {
+			const option = document.createElement('option');
+			option.value = deviceName;
+			option.textContent = deviceName;
+			specificDeviceSelect.appendChild(option);
+		});
+		console.log(`📱 Populated ${devices.length} devices for category: ${backendCategory}`);
+	} else {
+		console.log(
+			`⚠️ No devices found for category: ${backendCategory} (${currentDeviceCategory})`
+		);
+	}
+}
+
+// Function to update device preview
+function updateDevicePreview() {
+	const devicePreview = document.getElementById('devicePreview');
+	const previewDeviceName = document.getElementById('previewDeviceName');
+	const previewPlatform = document.getElementById('previewPlatform');
+	const previewOS = document.getElementById('previewOS');
+	const previewViewport = document.getElementById('previewViewport');
+	const previewTouchPoints = document.getElementById('previewTouchPoints');
+
+	if (!devicePreview || !previewDeviceName) return;
+
+	if (currentSpecificDevice) {
+		// Show preview
+		devicePreview.style.display = 'block';
+
+		// Update preview values based on device category
+		previewDeviceName.textContent = currentSpecificDevice;
+
+		// Map frontend categories to display names
+		const platformMapping = {
+			mobile: 'Android/iOS',
+			tablet: 'iPad/Android Tablet',
+			desktop: 'Windows/macOS/Linux'
+		};
+
+		previewPlatform.textContent = platformMapping[currentDeviceCategory] || 'Unknown';
+
+		// Set OS based on device category
+		if (currentDeviceCategory === 'mobile' || currentDeviceCategory === 'tablet') {
+			previewOS.textContent =
+				currentDeviceCategory === 'tablet' ? 'iOS/Android' : 'Android/iOS';
+		} else {
+			previewOS.textContent = 'Windows/macOS/Linux';
+		}
+
+		// Set viewport based on device category
+		if (currentDeviceCategory === 'mobile') {
+			previewViewport.textContent = '360x640 - 428x926';
+		} else if (currentDeviceCategory === 'tablet') {
+			previewViewport.textContent = '768x1024 - 1200x1600';
+		} else {
+			previewViewport.textContent = '1366x768 - 2560x1440';
+		}
+
+		// Set touch points
+		if (currentDeviceCategory === 'mobile' || currentDeviceCategory === 'tablet') {
+			previewTouchPoints.textContent = currentDeviceCategory === 'mobile' ? '5-10' : '5-10';
+		} else {
+			previewTouchPoints.textContent = '0';
+		}
+	} else {
+		// Hide preview if no specific device selected
+		devicePreview.style.display = 'none';
+	}
+}
+
+// Function to handle device category change
+function handleDeviceCategoryChange() {
+	const deviceOptions = document.querySelectorAll('input[name="deviceCategory"]');
+	const specificDeviceSection = document.getElementById('specificDeviceSection');
+	const specificDeviceSelect = document.getElementById('specificDevice');
+	const deviceTypeSummary = document.getElementById('deviceTypeSummary');
+
+	deviceOptions.forEach((option) => {
+		option.addEventListener('change', (e) => {
+			currentDeviceCategory = e.target.value;
+			currentSpecificDevice = null;
+
+			console.log(`🔄 Device category changed to: ${currentDeviceCategory}`);
+
+			// Update UI based on selection
+			if (currentDeviceCategory === 'mobile' || currentDeviceCategory === 'tablet') {
+				specificDeviceSection.style.display = 'block';
+				specificDeviceSelect.disabled = false;
+				populateDeviceOptions();
+			} else {
+				specificDeviceSection.style.display = 'none';
+				specificDeviceSelect.disabled = true;
+				specificDeviceSelect.value = '';
+			}
+
+			// Update summary
+			if (deviceTypeSummary) {
+				deviceTypeSummary.textContent =
+					currentDeviceCategory.charAt(0).toUpperCase() + currentDeviceCategory.slice(1);
+				deviceTypeSummary.parentElement.setAttribute('data-device', currentDeviceCategory);
+			}
+
+			// Hide device preview
+			const devicePreview = document.getElementById('devicePreview');
+			if (devicePreview) {
+				devicePreview.style.display = 'none';
+			}
+
+			// Update device option styling
+			updateDeviceOptionStyling();
+		});
+	});
+}
+
+// Function to handle specific device change
+function handleSpecificDeviceChange() {
+	const specificDeviceSelect = document.getElementById('specificDevice');
+	if (!specificDeviceSelect) return;
+
+	specificDeviceSelect.addEventListener('change', (e) => {
+		currentSpecificDevice = e.target.value;
+		console.log(`📱 Specific device selected: ${currentSpecificDevice}`);
+		updateDevicePreview();
+	});
+}
+
+// Function to handle refresh devices button
+function handleRefreshDevices() {
+	const refreshBtn = document.getElementById('refreshDevicesBtn');
+	if (!refreshBtn) return;
+
+	refreshBtn.addEventListener('click', async () => {
+		console.log('🔄 Refreshing devices...');
+
+		// Show loading state
+		refreshBtn.disabled = true;
+		refreshBtn.textContent = '⏳ Loading...';
+
+		try {
+			// Fetch new devices from backend
+			await fetchAvailableDevices();
+
+			// Repopulate device options
+			populateDeviceOptions();
+
+			// Reset selected device
+			currentSpecificDevice = null;
+			const specificDeviceSelect = document.getElementById('specificDevice');
+			if (specificDeviceSelect) {
+				specificDeviceSelect.value = '';
+			}
+
+			// Hide device preview
+			const devicePreview = document.getElementById('devicePreview');
+			if (devicePreview) {
+				devicePreview.style.display = 'none';
+			}
+
+			console.log('✅ Devices refreshed successfully');
+		} catch (error) {
+			console.error('❌ Failed to refresh devices:', error);
+		} finally {
+			// Reset button state
+			refreshBtn.disabled = false;
+			refreshBtn.textContent = '🔄 Refresh';
+		}
+	});
+}
+
+// Function to update device option styling
+function updateDeviceOptionStyling() {
+	const deviceOptions = document.querySelectorAll('.device-option');
+
+	deviceOptions.forEach((option) => {
+		const radio = option.querySelector('input[type="radio"]');
+		if (radio) {
+			option.setAttribute('data-category', radio.value);
+		}
+	});
+}
+
+// Function to initialize mobile device management
+function initializeMobileDeviceManagement() {
+	// Fetch available devices
+	fetchAvailableDevices();
+
+	// Set up event listeners
+	handleDeviceCategoryChange();
+	handleSpecificDeviceChange();
+	handleRefreshDevices();
+
+	// Initial setup
+	updateDeviceOptionStyling();
+
+	// Update summary initially
+	const deviceTypeSummary = document.getElementById('deviceTypeSummary');
+	if (deviceTypeSummary) {
+		deviceTypeSummary.textContent = 'Desktop';
+		deviceTypeSummary.parentElement.setAttribute('data-device', 'desktop');
+	}
+}
+
 // ===== Event Listeners =====
 document.addEventListener('DOMContentLoaded', () => {
 	// Initialize URL management
@@ -533,12 +774,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Initialize system info
 	updateSystemInfo();
 
+	// Initialize mobile device management
+	initializeMobileDeviceManagement();
+
 	// Set initial summary values
 	updateTotalProfilesSummary();
 
 	// Log initial message
 	logToConsole('🚀 GhostOps Automation System Ready');
 	logToConsole('✅ All systems operational');
+	logToConsole('📱 Mobile device emulation enabled');
 });
 
 // ===== Integration with existing automation system =====

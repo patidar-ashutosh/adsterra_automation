@@ -28,8 +28,57 @@ module.exports = async function injectFingerprint(page, fp) {
 			return { timeZone: fp.timezone, locale: fp.browserLanguages[0] };
 		};
 
-		/* Touch */
+		/* Touch Support */
 		Object.defineProperty(window, 'ontouchstart', { get: () => fp.maxTouchPoints > 0 });
+		Object.defineProperty(window, 'ontouchend', { get: () => fp.maxTouchPoints > 0 });
+		Object.defineProperty(window, 'ontouchmove', { get: () => fp.maxTouchPoints > 0 });
+		Object.defineProperty(window, 'ontouchcancel', { get: () => fp.maxTouchPoints > 0 });
+
+		/* Mobile Orientation API */
+		if (fp.orientation) {
+			Object.defineProperty(window, 'orientation', { get: () => fp.orientation.angle });
+			Object.defineProperty(screen, 'orientation', {
+				get: () => ({
+					type: fp.orientation.type,
+					angle: fp.orientation.angle
+				})
+			});
+		}
+
+		/* Mobile Sensors */
+		if (fp.sensors) {
+			// Accelerometer
+			if (fp.sensors.accelerometer) {
+				Object.defineProperty(window, 'DeviceMotionEvent', {
+					get: () =>
+						class MockDeviceMotionEvent extends Event {
+							constructor(type, init) {
+								super(type, init);
+								this.acceleration = { x: 0, y: 0, z: 0 };
+								this.accelerationIncludingGravity = { x: 0, y: 9.8, z: 0 };
+								this.rotationRate = { alpha: 0, beta: 0, gamma: 0 };
+								this.interval = 16;
+							}
+						}
+				});
+			}
+
+			// Gyroscope
+			if (fp.sensors.gyroscope) {
+				Object.defineProperty(window, 'DeviceOrientationEvent', {
+					get: () =>
+						class MockDeviceOrientationEvent extends Event {
+							constructor(type, init) {
+								super(type, init);
+								this.alpha = Math.random() * 360;
+								this.beta = Math.random() * 180 - 90;
+								this.gamma = Math.random() * 180 - 90;
+								this.absolute = false;
+							}
+						}
+				});
+			}
+		}
 
 		/* Permissions API */
 		const origQuery = window.navigator.permissions.query;
@@ -105,10 +154,10 @@ module.exports = async function injectFingerprint(page, fp) {
 		Object.defineProperty(navigator, 'getBattery', {
 			value: () =>
 				Promise.resolve({
-					charging: true,
-					level: 0.87,
-					chargingTime: 0,
-					dischargingTime: Infinity
+					charging: fp.battery ? fp.battery.charging : true,
+					level: fp.battery ? fp.battery.level : 0.87,
+					chargingTime: fp.battery ? fp.battery.chargingTime : 0,
+					dischargingTime: fp.battery ? fp.battery.dischargingTime : Infinity
 				})
 		});
 
@@ -146,6 +195,53 @@ module.exports = async function injectFingerprint(page, fp) {
 				};
 				return pc;
 			};
+		}
+
+		/* Performance API spoofing for mobile */
+		if (fp.isMobile) {
+			// Mobile devices have different performance characteristics
+			const origNow = performance.now;
+			performance.now = function () {
+				const time = origNow.call(this);
+				// Add slight variation to mimic mobile CPU throttling
+				return time + (Math.random() * 0.1 - 0.05);
+			};
+
+			// Mobile memory info
+			if (performance.memory) {
+				Object.defineProperty(performance.memory, 'usedJSHeapSize', {
+					get: () => Math.floor(Math.random() * 50000000) + 10000000 // 10-60MB
+				});
+				Object.defineProperty(performance.memory, 'totalJSHeapSize', {
+					get: () => Math.floor(Math.random() * 100000000) + 50000000 // 50-150MB
+				});
+				Object.defineProperty(performance.memory, 'jsHeapSizeLimit', {
+					get: () => Math.floor(Math.random() * 200000000) + 100000000 // 100-300MB
+				});
+			}
+		}
+
+		/* Vibration API for mobile */
+		if (fp.isMobile && fp.maxTouchPoints > 0) {
+			Object.defineProperty(navigator, 'vibrate', {
+				value: function (pattern) {
+					// Mock vibration - just return true to indicate support
+					return true;
+				}
+			});
+		}
+
+		/* Mobile-specific viewport meta */
+		if (fp.isMobile) {
+			// Ensure viewport meta tag exists and is mobile-friendly
+			let viewportMeta = document.querySelector('meta[name="viewport"]');
+			if (!viewportMeta) {
+				viewportMeta = document.createElement('meta');
+				viewportMeta.name = 'viewport';
+				document.head.appendChild(viewportMeta);
+			}
+			viewportMeta.content =
+				'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
 		}
 	}, fp);
 };

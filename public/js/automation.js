@@ -292,6 +292,11 @@ async function handleFormSubmission(e) {
 	const maxWaitTime = document.getElementById('maxWaitTime')?.value || '55';
 	const showBrowserWindows = document.getElementById('showBrowserWindows')?.checked ?? true;
 
+	// Get device parameters
+	const deviceCategory =
+		document.querySelector('input[name="deviceCategory"]:checked')?.value || 'desktop';
+	const specificDevice = document.getElementById('specificDevice')?.value || null;
+
 	// Create payload with actual values
 	const actualPayload = {
 		browser,
@@ -300,7 +305,9 @@ async function handleFormSubmission(e) {
 		timeout,
 		minWaitTime,
 		maxWaitTime,
-		headless: !showBrowserWindows // Convert to headless boolean (inverted)
+		headless: !showBrowserWindows, // Convert to headless boolean (inverted)
+		deviceCategory,
+		specificDevice
 	};
 
 	console.log('📋 Actual payload:', actualPayload);
@@ -321,6 +328,12 @@ async function handleFormSubmission(e) {
 		<div class="data-item">
 			<span class="data-label">Browser:</span>
 			<span class="data-value">${browser}</span>
+		</div>
+		<div class="data-item">
+			<span class="data-label">Device Type:</span>
+			<span class="data-value">${deviceCategory.charAt(0).toUpperCase() + deviceCategory.slice(1)}${
+		specificDevice ? ` (${specificDevice})` : ''
+	}</span>
 		</div>
 		<div class="data-item">
 			<span class="data-label">Browser Visibility:</span>

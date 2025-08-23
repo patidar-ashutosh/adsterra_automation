@@ -177,6 +177,140 @@
 							</div>
 						</div>
 
+						<!-- Device Emulation Section -->
+						<div class="card glass">
+							<h3 class="card-title">Device Emulation</h3>
+							<div class="device-emulation-section">
+								<div class="device-category-selection">
+									<h4 class="config-group-title">Device Type</h4>
+									<div class="device-options">
+										<label class="device-option">
+											<input
+												type="radio"
+												name="deviceCategory"
+												value="desktop"
+												checked
+											/>
+											<span class="device-option-content">
+												<span class="device-icon">🖥️</span>
+												<span class="device-text">
+													<strong>Desktop</strong>
+													<small>Traditional browser automation</small>
+												</span>
+											</span>
+										</label>
+										<label class="device-option">
+											<input
+												type="radio"
+												name="deviceCategory"
+												value="mobile"
+											/>
+											<span class="device-option-content">
+												<span class="device-icon">📱</span>
+												<span class="device-text">
+													<strong>Mobile</strong>
+													<small>Smartphone emulation</small>
+												</span>
+											</span>
+										</label>
+										<label class="device-option">
+											<input
+												type="radio"
+												name="deviceCategory"
+												value="tablet"
+											/>
+											<span class="device-option-content">
+												<span class="device-icon">📱</span>
+												<span class="device-text">
+													<strong>Tablet</strong>
+													<small>iPad/Android tablet emulation</small>
+												</span>
+											</span>
+										</label>
+										<label class="device-option">
+											<input
+												type="radio"
+												name="deviceCategory"
+												value="random"
+											/>
+											<span class="device-option-content">
+												<span class="device-icon">🎲</span>
+												<span class="device-text">
+													<strong>Random</strong>
+													<small>Random device selection</small>
+												</span>
+											</span>
+										</label>
+									</div>
+								</div>
+
+								<div
+									class="specific-device-selection"
+									id="specificDeviceSection"
+									style="display: none"
+								>
+									<h4 class="config-group-title">Specific Device</h4>
+									<div class="device-selector">
+										<div class="device-selector-row">
+											<select id="specificDevice" disabled>
+												<option value="">Select a device...</option>
+											</select>
+											<button
+												id="refreshDevicesBtn"
+												class="btn secondary"
+												title="Generate new random devices"
+											>
+												🔄 Refresh
+											</button>
+										</div>
+										<small class="help-text"
+											>Choose a specific device model for consistent
+											fingerprinting. Click refresh to generate new random
+											devices.</small
+										>
+									</div>
+								</div>
+
+								<div
+									class="device-preview"
+									id="devicePreview"
+									style="display: none"
+								>
+									<h4 class="config-group-title">Device Preview</h4>
+									<div class="device-info">
+										<div class="device-info-item">
+											<span class="device-info-label">Device:</span>
+											<span class="device-info-value" id="previewDeviceName"
+												>-</span
+											>
+										</div>
+										<div class="device-info-item">
+											<span class="device-info-label">Platform:</span>
+											<span class="device-info-value" id="previewPlatform"
+												>-</span
+											>
+										</div>
+										<div class="device-info-item">
+											<span class="device-info-label">OS:</span>
+											<span class="device-info-value" id="previewOS">-</span>
+										</div>
+										<div class="device-info-item">
+											<span class="device-info-label">Viewport:</span>
+											<span class="device-info-value" id="previewViewport"
+												>-</span
+											>
+										</div>
+										<div class="device-info-item">
+											<span class="device-info-label">Touch Points:</span>
+											<span class="device-info-value" id="previewTouchPoints"
+												>-</span
+											>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 						<!-- Browser Visibility Section -->
 						<div class="card glass">
 							<h3 class="card-title">Browser Window Visibility</h3>
@@ -215,6 +349,10 @@
 							<div class="summary-item">
 								<span class="summary-label">Total Sessions:</span>
 								<span id="totalSessions" class="summary-value">9</span>
+							</div>
+							<div class="summary-item">
+								<span class="summary-label">Device Type:</span>
+								<span id="deviceTypeSummary" class="summary-value">Desktop</span>
 							</div>
 						</div>
 					</div>

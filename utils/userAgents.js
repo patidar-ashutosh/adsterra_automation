@@ -1,23 +1,11 @@
 const UserAgent = require('user-agents');
 
-function generateUserAgent({
-	browserName = 'Chrome',
-	deviceCategory = 'desktop',
-	platform = 'Win32',
-	language = 'en-US'
-}) {
+function generateUserAgent({ deviceCategory = 'desktop' }) {
 	let userAgent;
 
 	try {
-		browserName = mapBrowserName(browserName);
-
 		userAgent = new UserAgent({
-			filter: {
-				browserName,
-				deviceCategory,
-				platform,
-				language
-			}
+			deviceCategory
 		});
 	} catch (err) {
 		console.warn('⚠️ No exact match found, falling back to random user agent.');
@@ -27,24 +15,11 @@ function generateUserAgent({
 	return {
 		ua: userAgent.toString(),
 		appVersion: userAgent.data.appVersion || '',
-		platform: userAgent.data.platform || platform,
+		platform: userAgent.data.platform || 'Win32',
 		vendor: userAgent.data.vendor || 'Google Inc.',
 		os: userAgent.data.os || 'Windows',
 		browser: userAgent.data.browser || 'Chrome'
 	};
-}
-
-function mapBrowserName(engineName) {
-	switch (engineName.toLowerCase()) {
-		case 'chromium':
-			return 'Chrome';
-		case 'firefox':
-			return 'Firefox';
-		case 'webkit':
-			return 'Safari';
-		default:
-			return engineName; // fallback to original name if unknown
-	}
 }
 
 module.exports = generateUserAgent;

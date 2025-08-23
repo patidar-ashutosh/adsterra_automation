@@ -14,6 +14,7 @@ const {
 	updateGlobalCycleInfo
 } = require('../utils/helpers');
 const injectFingerprint = require('../utils/injectFingerprint');
+const { generateRandomDevice, getDeviceByName } = require('../utils/mobileDevices');
 
 const activeWindows = new Map();
 let totalWindows = 0;
@@ -56,7 +57,9 @@ async function processWindow(
 	urlIndex = 1,
 	profileNum = 1,
 	originalUrl = '',
-	headless
+	headless,
+	deviceCategory = 'desktop',
+	specificDevice = null
 ) {
 	let browserInstance = null;
 	let context = null;
@@ -96,8 +99,30 @@ async function processWindow(
 			windowIndex
 		);
 
-		const fingerprint = await generateFingerprint(browserChoice.name, 'desktop');
+		// Generate fingerprint based on device category
+		const fingerprint = await generateFingerprint(
+			browserChoice.name,
+			deviceCategory,
+			specificDevice
+		);
 		const userAgent = fingerprint.userAgent;
+		const isMobile = fingerprint.isMobile || false;
+
+		// Log device information
+		if (isMobile) {
+			log(`📱 Mobile device: ${fingerprint.platform} - ${fingerprint.os}`, windowIndex);
+			log(
+				`📱 Viewport: ${fingerprint.screen.width}x${fingerprint.screen.height}`,
+				windowIndex
+			);
+			log(`📱 Touch points: ${fingerprint.maxTouchPoints}`, windowIndex);
+		} else {
+			log(`🖥️ Desktop device: ${fingerprint.platform} - ${fingerprint.os}`, windowIndex);
+			log(
+				`🖥️ Viewport: ${fingerprint.screen.width}x${fingerprint.screen.height}`,
+				windowIndex
+			);
+		}
 
 		// Check if stop was requested before launching browser
 		if (shouldStop) {
@@ -142,15 +167,28 @@ async function processWindow(
 			return;
 		}
 
-		context = await browserInstance.newContext({
+		// Create context with mobile-specific settings
+		const contextOptions = {
 			userAgent,
 			viewport: fingerprint.screen,
 			locale: fingerprint.browserLanguages[0],
 			timezoneId: fingerprint.timezone,
-			deviceScaleFactor: fingerprint.deviceScaleFactor || 1,
-			isMobile: fingerprint.isMobile || false,
+			deviceScaleFactor: fingerprint.devicePixelRatio || 1,
+			isMobile: isMobile,
 			hasTouch: fingerprint.hasTouch || false
-		});
+		};
+
+		// Add mobile-specific viewport settings
+		if (isMobile) {
+			contextOptions.viewport = {
+				width: fingerprint.screen.width,
+				height: fingerprint.screen.height
+			};
+			// Set mobile user agent
+			contextOptions.userAgent = fingerprint.userAgent;
+		}
+
+		context = await browserInstance.newContext(contextOptions);
 
 		// Check if stop was requested after context creation
 		if (shouldStop) {
@@ -259,7 +297,9 @@ async function processWindow(
 				cycle,
 				urlIndex,
 				profileNum,
-				originalUrl
+				originalUrl,
+				isMobile,
+				deviceCategory
 			});
 
 			log(`⏱️ Wait timer started (${waitTime}s allocated)`, windowIndex);
@@ -338,8 +378,14 @@ async function processWindow(
 
 		// Only attempt scrolling if page is still available and not stopped
 		if (page && !page.isClosed() && !shouldStop && !isCompleted) {
-			// Pass the timeout control to scroll function
-			await simulateHumanScroll(page, usableScrollTime, windowIndex, strictTimeoutId);
+			// Pass the timeout control to scroll function with mobile information
+			await simulateHumanScroll(
+				page,
+				usableScrollTime,
+				windowIndex,
+				strictTimeoutId,
+				isMobile
+			);
 			await page.waitForTimeout(1000);
 		}
 
@@ -433,7 +479,9 @@ async function runAutomation(config) {
 		timeout = 30,
 		minWaitTime = 45,
 		maxWaitTime = 55,
-		headless
+		headless,
+		deviceCategory = 'desktop',
+		specificDevice = null
 	} = config;
 
 	// Set default headless value only if not provided (backward compatibility)
@@ -478,6 +526,7 @@ async function runAutomation(config) {
 	log(
 		`🚀 Starting website automation with ${totalUrls} websites, ${profilesPerUrl} profiles per website, ${totalCycles} cycles`
 	);
+	log(`📱 Device Category: ${deviceCategory}${specificDevice ? ` (${specificDevice})` : ''}`);
 	log(`📊 Total profiles: ${profilesPerUrl * totalUrls}, Total sessions: ${totalWindows}`);
 
 	// Debug: Show URL configuration
@@ -527,7 +576,9 @@ async function runAutomation(config) {
 						urlIndex + 1,
 						profileNum,
 						originalUrl,
-						headlessMode // Pass the determined headlessMode
+						headlessMode, // Pass the determined headlessMode
+						deviceCategory, // Pass device category
+						specificDevice // Pass specific device if selected
 					)
 				);
 
@@ -644,7 +695,9 @@ function getStatus() {
 			cycle: data.cycle,
 			urlIndex: data.urlIndex || 1,
 			profileNum: data.profileNum || 1,
-			originalUrl: data.originalUrl || ''
+			originalUrl: data.originalUrl || '',
+			isMobile: data.isMobile || false,
+			deviceCategory: data.deviceCategory || 'desktop'
 		};
 	});
 
